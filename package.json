@@ -1,0 +1,53 @@
+{
+  "name": "@opentiny/tiny-schema-renderer",
+  "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opentiny/tiny-schema-renderer",
+    "directory": "packages/canvas"
+  },
+  "bugs": {
+    "url": "https://github.com/opentiny/tiny-schema-renderer/issues"
+  },
+  "author": "OpenTiny Team",
+  "license": "MIT",
+  "homepage": "https://opentiny.design/tiny-engine",
+  "type": "module",
+  "dependencies": {
+    "@babel/core": "7.18.13",
+    "@opentiny/tiny-engine-builtin-component": "2.2.0",
+    "@opentiny/tiny-engine-common": "2.2.0",
+    "@opentiny/tiny-engine-controller": "^1.0.6",
+    "@vue/babel-plugin-jsx": "^1.2.5",
+    "@vue/shared": "^3.3.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.2",
+    "@vitejs/plugin-vue-jsx": "^4.0.1",
+    "vite": "^5.4.2"
+  },
+  "peerDependencies": {
+    "@opentiny/vue": "^3.20.0",
+    "@opentiny/vue-icon": "^3.20.0",
+    "@opentiny/vue-renderless": "^3.20.0",
+    "vue": "^3.4.15"
+  }
+}
