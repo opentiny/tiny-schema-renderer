@@ -10,7 +10,7 @@
  *
  */
 
-import { h, provide, reactive } from "vue";
+import { h, provide } from "vue";
 import { isHTMLTag, hyphenate } from "@vue/shared";
 import babelPluginJSX from "@vue/babel-plugin-jsx";
 import { transformSync } from "@babel/core";

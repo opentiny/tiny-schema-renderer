@@ -12,10 +12,8 @@
 
 import { h, nextTick, reactive, shallowReactive, watchEffect } from "vue";
 import Loading from "./Loading.vue";
-import { Notify } from "@opentiny/vue";
-import { generateFunction } from "@opentiny/tiny-engine-controller/utils";
-import renderer, { parseData, isStateAccessor } from "./render";
-import { setContext, getContext, context } from "./context";
+import renderer, { parseData } from "./render";
+import { setContext, getContext } from "./context";
 
 export default {
   props: {
