@@ -79,8 +79,6 @@ export const setConfigure = (configureData) => {
   Object.assign(configure, configureData);
 };
 
-
-
 const isJSSlot = (data) => {
   return data && data.type === "JSSlot";
 };
@@ -144,7 +142,6 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
   }
 };
 
-
 const renderDefault = (children, scope, parent) =>
   children.map?.((child) =>
     // eslint-disable-next-line no-use-before-define
@@ -180,7 +177,7 @@ export const generateFn = (innerFn, context) => {
       }
 
       // 这里注意如果innerFn返回的是一个promise则需要捕获异常，重新返回默认一条空数据
-      if (result.then) {
+      if (result?.then) {
         result = new Promise((resolve) => {
           result.then(resolve).catch((error) => {
             Notify({
@@ -415,12 +412,6 @@ parseList.push(
   ]
 );
 
-const stopEvent = (event) => {
-  event.preventDefault?.();
-  event.stopPropagation?.();
-  return false;
-};
-
 const generateSlotGroup = (children, isCustomElm, schema) => {
   const slotGroup = {};
 
@@ -480,14 +471,7 @@ const getBindProps = (schema, scope) => {
 
   const bindProps = {
     ...parseData(schema.props, scope),
-    onMouseover: stopEvent,
-    onFocus: stopEvent,
   };
-
-  // 在捕获阶段阻止事件的传播
-  if (clickCapture(componentName)) {
-    bindProps.onClickCapture = stopEvent;
-  }
 
   if (Mapper[componentName]) {
     bindProps.schema = schema;
