@@ -32,6 +32,8 @@ import {
 
 const hyphenateRE = /\B([A-Z])/g;
 const customElements = {};
+const [JS_EXPRESSION, JS_FUNCTION] = ["JSExpression", "JSFunction"];
+const isOn = (key) => /^on[A-Z]\w*/.test(key);
 
 const transformJSX = (code) => {
   const res = transformSync(code, {
@@ -360,6 +362,27 @@ const parseObjectData = (data, scope, ctx) => {
       res[key] = parseData(value, scope, ctx);
     }
   });
+
+  const propsEntries = Object.entries(data);
+  const modelValue = propsEntries.find(
+    ([_key, value]) => value?.type === JS_EXPRESSION && value?.model === true
+  );
+  const hasUpdateModelValue = propsEntries.find(
+    ([key]) => isOn(key) && key.startsWith(`onUpdate:${modelValue?.[0]}`)
+  );
+
+  if (modelValue && !hasUpdateModelValue) {
+    // 添加 onUpdate:modelKey 事件
+    res[`onUpdate:${modelValue?.[0]}`] = parseData(
+      {
+        type: JS_FUNCTION,
+        value: `(value) => ${modelValue[1].value}=value`,
+      },
+      scope,
+      ctx
+    );
+  }
+
   return res;
 };
 

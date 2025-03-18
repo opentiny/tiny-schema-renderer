@@ -1,5 +1,9 @@
 {
-  "state": {},
+  "state": {
+    "formData": {
+      "name": "aa"
+    }
+  },
   "methods": {
     "onClickNew": {
       "type": "JSFunction",
@@ -28,7 +32,11 @@
               "componentName": "TinyInput",
               "props": {
                 "placeholder": "请输入",
-                "modelValue": ""
+                "modelValue": {
+                  "type": "JSExpression",
+                  "value": "this.state.formData.name",
+                  "model": true
+                }
               },
               "id": "1555f756"
             }
