@@ -42,6 +42,7 @@ const schema = {
 </script>
 ```
 
+
 ## 使用方式二
 
 当作 `webcomponents` 标签使用
