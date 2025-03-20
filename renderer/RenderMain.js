@@ -13,7 +13,7 @@
 import { h, nextTick, reactive, shallowReactive, watchEffect } from "vue";
 import Loading from "./Loading.vue";
 import renderer, { parseData } from "./render";
-import { setContext, getContext } from "./context";
+import useContext from "./useContext";
 
 export default {
   props: {
@@ -23,9 +23,12 @@ export default {
     },
   },
   setup(props) {
+    const { context, setContext, getContext } = useContext();
     const reset = (obj) => {
       Object.keys(obj).forEach((key) => delete obj[key]);
     };
+
+    provide("pageContext", context);
 
     const pageSchema = reactive({});
     const methods = {};
@@ -83,7 +86,7 @@ export default {
         state,
       };
       // 此处提升很重要，因为setState、initProps也会触发画布重新渲染，所以需要提升上下文环境的设置时间
-      setContext(context);
+      setContext(context, true);
 
       // 设置方法调用上下文
       setMethods(newSchema.methods, true);

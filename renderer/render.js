@@ -20,7 +20,6 @@ import {
   CanvasCol,
   CanvasRowColContainer,
 } from "@opentiny/tiny-engine-builtin-component";
-import { context } from "./context";
 import {
   CanvasBox,
   CanvasIcon,
@@ -295,7 +294,7 @@ const parseJSXFunction = (data, ctx) => {
   }
 };
 
-const parseJSFunction = (data, scope, ctx = context) => {
+const parseJSFunction = (data, scope, ctx) => {
   try {
     const innerFn = newFn(`return ${data.value}`).bind(ctx)();
     return generateFn(innerFn, ctx);
@@ -306,7 +305,7 @@ const parseJSFunction = (data, scope, ctx = context) => {
 
 const parseList = [];
 
-export function parseData(data, scope, ctx = context) {
+export function parseData(data, scope, ctx) {
   let res = data;
   parseList.some((item) => {
     if (item.type(data)) {
@@ -321,7 +320,7 @@ export function parseData(data, scope, ctx = context) {
   return res;
 }
 
-const parseCondition = (condition, scope, ctx = context) => {
+const parseCondition = (condition, scope, ctx) => {
   // eslint-disable-next-line no-eq-null
   return condition == null ? true : parseData(condition, scope, ctx);
 };
@@ -481,10 +480,7 @@ const renderSlot = (children, scope, schema, isCustomElm) => {
 const checkGroup = (componentName) =>
   configure[componentName]?.nestingRule?.childWhitelist?.length;
 
-const clickCapture = (componentName) =>
-  configure[componentName]?.clickCapture !== false;
-
-const getBindProps = (schema, scope) => {
+const getBindProps = (schema, scope, context) => {
   const { id, componentName } = schema;
   const invalidity = configure[componentName]?.invalidity || [];
 
@@ -493,7 +489,7 @@ const getBindProps = (schema, scope) => {
   }
 
   const bindProps = {
-    ...parseData(schema.props, scope),
+    ...parseData(schema.props, scope, context),
   };
 
   if (Mapper[componentName]) {
@@ -538,10 +534,10 @@ const injectPlaceHolder = (componentName, children) => {
   return children;
 };
 
-const renderGroup = (children, scope, parent) => {
+const renderGroup = (children, scope, context) => {
   return children.map?.((schema) => {
     const { componentName, children, loop, loopArgs, condition, id } = schema;
-    const loopList = parseData(loop, scope);
+    const loopList = parseData(loop, scope, context);
 
     const renderElement = (item, index) => {
       const mergeScope = getLoopScope({
@@ -551,7 +547,7 @@ const renderGroup = (children, scope, parent) => {
         loopArgs,
       });
 
-      if (!parseCondition(condition, mergeScope)) {
+      if (!parseCondition(condition, mergeScope, context)) {
         return null;
       }
 
@@ -559,10 +555,10 @@ const renderGroup = (children, scope, parent) => {
 
       return h(
         getComponent(componentName),
-        getBindProps(schema, mergeScope),
+        getBindProps(schema, mergeScope, context),
         Array.isArray(renderChildren)
           ? renderSlot(renderChildren, mergeScope, schema)
-          : parseData(renderChildren, mergeScope)
+          : parseData(renderChildren, mergeScope, context)
       );
     };
 
@@ -570,7 +566,7 @@ const renderGroup = (children, scope, parent) => {
   });
 };
 
-const getChildren = (schema, mergeScope) => {
+const getChildren = (schema, mergeScope, context) => {
   const { componentName, children } = schema;
   const renderChildren = injectPlaceHolder(componentName, children);
 
@@ -584,11 +580,11 @@ const getChildren = (schema, mergeScope) => {
       return renderDefault(renderChildren, mergeScope, schema);
     } else {
       return isGroup
-        ? renderGroup(renderChildren, mergeScope, schema)
+        ? renderGroup(renderChildren, mergeScope, context)
         : renderSlot(renderChildren, mergeScope, schema, isCustomElm);
     }
   } else {
-    return parseData(renderChildren, mergeScope);
+    return parseData(renderChildren, mergeScope, context);
   }
 };
 
@@ -603,6 +599,7 @@ export const renderer = {
     provide("schema", props.schema);
   },
   render() {
+    const context = inject("pageContext");
     const { scope, schema, parent } = this;
     const { componentName, loop, loopArgs, condition } = schema;
 
@@ -610,12 +607,12 @@ export const renderer = {
     generateCollection(schema);
 
     if (!componentName) {
-      return parseData(schema, scope);
+      return parseData(schema, scope, context);
     }
 
     const component = getComponent(componentName);
 
-    const loopList = parseData(loop, scope);
+    const loopList = parseData(loop, scope, context);
 
     const renderElement = (item, index) => {
       let mergeScope = item
@@ -627,14 +624,14 @@ export const renderer = {
           })
         : scope;
 
-      if (!parseCondition(condition, mergeScope)) {
+      if (!parseCondition(condition, mergeScope, context)) {
         return null;
       }
 
       return h(
         component,
-        getBindProps(schema, mergeScope),
-        getChildren(schema, mergeScope)
+        getBindProps(schema, mergeScope, context),
+        getChildren(schema, mergeScope, context)
       );
     };
 
