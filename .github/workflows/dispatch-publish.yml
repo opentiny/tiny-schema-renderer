@@ -45,6 +45,6 @@ jobs:
 
       - name: Publish
         run: |
-          pnpm publish --access public
+          pnpm pub
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
