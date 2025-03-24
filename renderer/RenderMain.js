@@ -10,7 +10,7 @@
  *
  */
 
-import { h, nextTick, reactive, shallowReactive, watchEffect } from "vue";
+import { h, provide, nextTick, reactive, shallowReactive, watchEffect } from "vue";
 import Loading from "./Loading.vue";
 import renderer, { parseData } from "./render";
 import useContext from "./useContext";
