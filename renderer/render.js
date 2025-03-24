@@ -10,7 +10,7 @@
  *
  */
 
-import { h, provide, inject } from "vue";
+import { h, provide, inject, watch } from "vue";
 import { isHTMLTag, hyphenate } from "@vue/shared";
 import babelPluginJSX from "@vue/babel-plugin-jsx";
 import { transformSync } from "@babel/core";
@@ -375,7 +375,7 @@ const parseObjectData = (data, scope, ctx) => {
     res[`onUpdate:${modelValue?.[0]}`] = parseData(
       {
         type: JS_FUNCTION,
-        value: `(value) => ${modelValue[1].value}=value`,
+        value: `(value) => {debugger; ${modelValue[1].value}=value}`,
       },
       scope,
       ctx

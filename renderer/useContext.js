@@ -1,4 +1,4 @@
-import { shallowReactive } from "vue";
+import { shallowReactive, watch } from "vue";
 
 export default () => {
   const context = shallowReactive({});
@@ -11,6 +11,20 @@ export default () => {
   };
 
   const getContext = () => context;
+
+  watch(
+    () => context.state,
+    (val) => {
+      debugger
+    },
+    {
+      deep: true,
+      immediate: true,
+      onTrigger(...args) {
+        debugger;
+      },
+    }
+  );
 
   return {
     context,

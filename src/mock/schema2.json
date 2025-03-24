@@ -1,13 +1,13 @@
 {
   "state": {
     "formData": {
-      "name": "aa"
+      "name": "bb"
     }
   },
   "methods": {
     "onClickNew": {
       "type": "JSFunction",
-      "value": "function onClickNew(event) {\n  console.log(111, this.state.formData)\n}"
+      "value": "function onClickNew(event) {\n  console.log(222, this.state.formData)\n}"
     }
   },
   "componentName": "Page",
@@ -53,11 +53,7 @@
               "componentName": "TinyInput",
               "props": {
                 "placeholder": "请输入",
-                "modelValue": {
-                  "type": "JSExpression",
-                  "value": "this.state.formData.password",
-                  "model": true
-                },
+                "modelValue": "",
                 "type": "password"
               },
               "id": "226426d2"
