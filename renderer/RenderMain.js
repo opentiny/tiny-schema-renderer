@@ -32,7 +32,7 @@ export default {
 
     const pageSchema = reactive({});
     const methods = {};
-    const state = shallowReactive({});
+    const state = reactive({});
 
     const setMethods = (data = {}, clear) => {
       clear && reset(methods);
