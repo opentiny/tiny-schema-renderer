@@ -1,30 +1,14 @@
-import { shallowReactive, watch } from "vue";
+import { reactive, watch } from 'vue';
 
 export default () => {
-  const context = shallowReactive({});
-
-  // 从大纲树控制隐藏
+  const context = reactive({});
 
   const setContext = (ctx, clear) => {
-    clear && Object.keys(context).forEach((key) => delete context[key]);
+    clear && Object.keys(context).forEach(key => delete context[key]);
     Object.assign(context, ctx);
   };
 
   const getContext = () => context;
-
-  watch(
-    () => context.state,
-    (val) => {
-      debugger
-    },
-    {
-      deep: true,
-      immediate: true,
-      onTrigger(...args) {
-        debugger;
-      },
-    }
-  );
 
   return {
     context,

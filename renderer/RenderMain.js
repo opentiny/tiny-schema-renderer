@@ -10,18 +10,11 @@
  *
  */
 
-import {
-  h,
-  provide,
-  watch,
-  nextTick,
-  reactive,
-  shallowReactive,
-  watchEffect,
-} from "vue";
-import Loading from "./Loading.vue";
-import renderer, { parseData } from "./render";
-import useContext from "./useContext";
+import { h, ref, provide, watch, nextTick, reactive, shallowReactive, watchEffect } from 'vue';
+import Loading from './Loading.vue';
+import renderer, { parseData } from './render';
+import useContext from './useContext';
+import useState from './useState';
 
 export default {
   props: {
@@ -32,15 +25,16 @@ export default {
   },
   setup(props) {
     const { context, setContext, getContext } = useContext();
-    const reset = (obj) => {
-      Object.keys(obj).forEach((key) => delete obj[key]);
+    const { state, setState } = useState({ getContext });
+    const reset = obj => {
+      Object.keys(obj).forEach(key => delete obj[key]);
     };
 
-    provide("pageContext", context);
+    provide('pageContext', context);
 
+    const refreshKey = ref(1);
     const pageSchema = reactive({});
     const methods = {};
-    const state = shallowReactive({});
 
     const setMethods = (data = {}, clear) => {
       clear && reset(methods);
@@ -48,7 +42,7 @@ export default {
       Object.assign(
         methods,
         Object.fromEntries(
-          Object.keys(data).map((key) => {
+          Object.keys(data).map(key => {
             return [key, parseData(data[key], {}, getContext())];
           })
         )
@@ -56,26 +50,17 @@ export default {
       setContext(methods);
     };
 
-    const setState = (data, clear) => {
-      clear && reset(state);
-      if (!pageSchema.state) {
-        pageSchema.state = data;
-      }
-
-      Object.assign(state, parseData(data, {}, getContext()) || {});
-    };
-
-    const setPageCss = (css = "") => {
-      const id = "page-css";
+    const setPageCss = (css = '') => {
+      const id = 'page-css';
       let element = document.getElementById(id);
-      const head = document.querySelector("head");
+      const head = document.querySelector('head');
 
-      document.body.setAttribute("style", "");
+      document.body.setAttribute('style', '');
 
       if (!element) {
-        element = document.createElement("style");
-        element.setAttribute("type", "text/css");
-        element.setAttribute("id", id);
+        element = document.createElement('style');
+        element.setAttribute('type', 'text/css');
+        element.setAttribute('id', id);
 
         element.innerHTML = css;
         head.appendChild(element);
@@ -84,23 +69,18 @@ export default {
       }
     };
 
-    const setSchema = async (data) => {
+    const setSchema = async data => {
       if (!data) {
         return;
       }
       const newSchema = JSON.parse(JSON.stringify(data));
-
       const context = {
         state,
       };
-      // 此处提升很重要，因为setState、initProps也会触发画布重新渲染，所以需要提升上下文环境的设置时间
-      setContext(context, true);
 
-      // 设置方法调用上下文
-      setMethods(newSchema.methods, true);
-
-      // 这里setState（会触发画布渲染），是因为状态管理里面的变量会用到props、utils、bridge、stores、methods
-      setState(newSchema.state, true);
+      setContext(context);
+      setMethods(newSchema.methods);
+      setState(newSchema.state);
       await nextTick();
       setPageCss(data.css);
 
@@ -108,7 +88,7 @@ export default {
     };
 
     watchEffect(() => {
-      if (!props.schema || !Object.keys(props.schema)) {
+      if (!props.schema || !Object.keys(props.schema).length) {
         return;
       }
 
@@ -118,20 +98,21 @@ export default {
     return {
       pageSchema,
       methods,
-      state,
+      refreshKey,
     };
   },
   render() {
+    const { refreshKey } = this;
     // 渲染画布增加根节点，与出码和预览保持一致
     const rootChildrenSchema = {
-      componentName: "div",
+      componentName: 'div',
       // 手动添加一个唯一的属性，后续在画布选中此节点时方便处理额外的逻辑。由于没有修改schema，不会影响出码
       props: {},
       children: this.pageSchema.children,
     };
 
     return this.pageSchema.children?.length
-      ? h(renderer, { schema: rootChildrenSchema, parent: this.pageSchema })
+      ? h(renderer, { key: refreshKey.value, schema: rootChildrenSchema, parent: this.pageSchema })
       : [h(Loading)];
   },
 };

@@ -10,47 +10,36 @@
  *
  */
 
-import { h, provide, inject, watch } from "vue";
-import { isHTMLTag, hyphenate } from "@vue/shared";
-import babelPluginJSX from "@vue/babel-plugin-jsx";
-import { transformSync } from "@babel/core";
-import TinyVue, { Notify } from "@opentiny/vue";
-import {
-  CanvasRow,
-  CanvasCol,
-  CanvasRowColContainer,
-} from "@opentiny/tiny-engine-builtin-component";
-import {
-  CanvasBox,
-  CanvasIcon,
-  CanvasText,
-  CanvasSlot,
-  CanvasImg,
-  CanvasPlaceholder,
-} from "./builtin";
+import { h, provide, inject, watch } from 'vue';
+import { isHTMLTag, hyphenate } from '@vue/shared';
+import babelPluginJSX from '@vue/babel-plugin-jsx';
+import { transformSync } from '@babel/core';
+import TinyVue, { Notify } from '@opentiny/vue';
+import { CanvasRow, CanvasCol, CanvasRowColContainer } from '@opentiny/tiny-engine-builtin-component';
+import { CanvasBox, CanvasIcon, CanvasText, CanvasSlot, CanvasImg, CanvasPlaceholder } from './builtin';
 
 const hyphenateRE = /\B([A-Z])/g;
 const customElements = {};
-const [JS_EXPRESSION, JS_FUNCTION] = ["JSExpression", "JSFunction"];
-const isOn = (key) => /^on[A-Z]\w*/.test(key);
+const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction'];
+const isOn = key => /^on[A-Z]\w*/.test(key);
 
-const transformJSX = (code) => {
+const transformJSX = code => {
   const res = transformSync(code, {
     plugins: [
       [
         babelPluginJSX,
         {
-          pragma: "h",
-          isCustomElement: (name) => customElements[name],
+          pragma: 'h',
+          isCustomElement: name => customElements[name],
         },
       ],
     ],
   });
-  return (res.code || "")
-    .replace(/import \{.+\} from "vue";/, "")
+  return (res.code || '')
+    .replace(/import \{.+\} from "vue";/, '')
     .replace(/h\(_?resolveComponent\((.*?)\)/g, `h(this.getComponent($1)`)
-    .replace(/_?resolveComponent/g, "h")
-    .replace(/_?createTextVNode\((.*?)\)/g, "$1")
+    .replace(/_?resolveComponent/g, 'h')
+    .replace(/_?createTextVNode\((.*?)\)/g, '$1')
     .trim();
 };
 
@@ -70,52 +59,51 @@ const Mapper = {
 
 export const collectionMethodsMap = {};
 
-const getNative = (name) => {
+const getNative = name => {
   return TinyVue?.[name];
 };
 
 const configure = {};
 
-export const setConfigure = (configureData) => {
+export const setConfigure = configureData => {
   Object.assign(configure, configureData);
 };
 
-const isJSSlot = (data) => {
-  return data && data.type === "JSSlot";
+const isJSSlot = data => {
+  return data && data.type === 'JSSlot';
 };
 
-const isJSExpression = (data) => {
-  return data && data.type === "JSExpression";
+const isJSExpression = data => {
+  return data && data.type === 'JSExpression';
 };
 
-const isJSFunction = (data) => {
-  return data && data.type === "JSFunction";
+const isJSFunction = data => {
+  return data && data.type === 'JSFunction';
 };
 
-const isJSResource = (data) => {
-  return data && data.type === "JSResource";
+const isJSResource = data => {
+  return data && data.type === 'JSResource';
 };
 
-const isString = (data) => {
-  return typeof data === "string";
+const isString = data => {
+  return typeof data === 'string';
 };
 
-const isArray = (data) => {
+const isArray = data => {
   return Array.isArray(data);
 };
 
-const isFunction = (data) => {
-  return typeof data === "function";
+const isFunction = data => {
+  return typeof data === 'function';
 };
 
-const isObject = (data) => {
-  return typeof data === "object";
+const isObject = data => {
+  return typeof data === 'object';
 };
 
 // 判断是否是状态访问器
-export const isStateAccessor = (stateData) =>
-  stateData?.accessor?.getter?.type === "JSFunction" ||
-  stateData?.accessor?.setter?.type === "JSFunction";
+export const isStateAccessor = stateData =>
+  stateData?.accessor?.getter?.type === 'JSFunction' || stateData?.accessor?.setter?.type === 'JSFunction';
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
@@ -126,14 +114,11 @@ export const newFn = (...argv) => {
 const parseExpression = (data, scope, ctx, isJsx = false) => {
   try {
     const expression = isJsx ? transformJSX(data.value) : data.value;
-    return newFn("$scope", `with($scope || {}) { return ${expression} }`).call(
-      ctx,
-      {
-        ...ctx,
-        ...scope,
-        slotScope: scope,
-      }
-    );
+    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(ctx, {
+      ...ctx,
+      ...scope,
+      slotScope: scope,
+    });
   } catch (err) {
     // 解析抛出异常，则再尝试解析 JSX 语法。如果解析 JSX 语法仍然出现错误，isJsx 变量会确保不会再次递归执行解析
     if (!isJsx) {
@@ -144,7 +129,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
 };
 
 const renderDefault = (children, scope, parent) =>
-  children.map?.((child) =>
+  children.map?.(child =>
     // eslint-disable-next-line no-use-before-define
     h(renderer, {
       schema: child,
@@ -154,7 +139,7 @@ const renderDefault = (children, scope, parent) =>
   );
 
 const parseJSSlot = (data, scope) => {
-  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, data);
+  return $scope => renderDefault(data.value, { ...scope, ...$scope }, data);
 };
 
 export const generateFn = (innerFn, context) => {
@@ -171,7 +156,7 @@ export const generateFn = (innerFn, context) => {
         result = innerFn.call(context, ...args);
       } catch (error) {
         Notify({
-          type: "warning",
+          type: 'warning',
           title: `函数:${innerFn.name}执行报错`,
           message: error?.message || `函数:${innerFn.name}执行报错，请检查语法`,
         });
@@ -179,12 +164,12 @@ export const generateFn = (innerFn, context) => {
 
       // 这里注意如果innerFn返回的是一个promise则需要捕获异常，重新返回默认一条空数据
       if (result?.then) {
-        result = new Promise((resolve) => {
-          result.then(resolve).catch((error) => {
+        result = new Promise(resolve => {
+          result.then(resolve).catch(error => {
             Notify({
-              type: "warning",
-              title: "异步函数执行报错",
-              message: error?.message || "异步函数执行报错，请检查语法",
+              type: 'warning',
+              title: '异步函数执行报错',
+              message: error?.message || '异步函数执行报错，请检查语法',
             });
             // 这里需要至少返回一条空数据，方便用户使用表格默认插槽
             resolve({
@@ -201,17 +186,17 @@ export const generateFn = (innerFn, context) => {
 };
 
 // 解析函数字符串结构
-const parseFunctionString = (fnStr) => {
+const parseFunctionString = fnStr => {
   const fnRegexp = /(async)?.*?(\w+) *\(([\s\S]*?)\) *\{([\s\S]*)\}/;
   const result = fnRegexp.exec(fnStr);
   if (result) {
     return {
-      type: result[1] || "",
+      type: result[1] || '',
       name: result[2],
       params: result[3]
-        .split(",")
-        .map((item) => item.trim())
-        .filter((item) => Boolean(item)),
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => Boolean(item)),
       body: result[4],
     };
   }
@@ -234,7 +219,7 @@ const getPlainProps = (object = {}) => {
       renderKey = hyphenate(renderKey);
     }
 
-    if (["boolean", "string", "number"].includes(typeof value)) {
+    if (['boolean', 'string', 'number'].includes(typeof value)) {
       props[renderKey] = value;
     } else {
       // 如果传给webcomponent标签的是对象或者数组需要使用.prop修饰符，转化成h函数就是如下写法
@@ -244,13 +229,9 @@ const getPlainProps = (object = {}) => {
   return props;
 };
 
-const generateCollection = (schema) => {
-  if (
-    schema.componentName === "Collection" &&
-    schema.props?.dataSource &&
-    schema.children
-  ) {
-    schema.children.forEach((item) => {
+const generateCollection = schema => {
+  if (schema.componentName === 'Collection' && schema.props?.dataSource && schema.children) {
+    schema.children.forEach(item => {
       const fetchData = item.props?.fetchData;
       const methodMatch = fetchData?.value?.match(/this\.(.+?)}/);
       if (fetchData && methodMatch?.[1]) {
@@ -262,13 +243,8 @@ const generateCollection = (schema) => {
   }
 };
 
-export const getComponent = (name) => {
-  return (
-    Mapper[name] ||
-    getNative(name) ||
-    customElements[name] ||
-    (isHTMLTag(name) ? name : null)
-  );
+export const getComponent = name => {
+  return Mapper[name] || getNative(name) || customElements[name] || (isHTMLTag(name) ? name : null);
 };
 
 // 解析JSX字符串为可执行函数
@@ -276,8 +252,7 @@ const parseJSXFunction = (data, ctx) => {
   try {
     const newValue = transformJSX(data.value);
     const fnInfo = parseFunctionString(newValue);
-    if (!fnInfo)
-      throw Error("函数解析失败，请检查格式。示例：function fnName() { }");
+    if (!fnInfo) throw Error('函数解析失败，请检查格式。示例：function fnName() { }');
 
     return newFn(...fnInfo.params, fnInfo.body).bind({
       ...ctx,
@@ -285,9 +260,9 @@ const parseJSXFunction = (data, ctx) => {
     });
   } catch (error) {
     Notify({
-      type: "warning",
-      title: "函数声明解析报错",
-      message: error?.message || "函数声明解析报错，请检查语法",
+      type: 'warning',
+      title: '函数声明解析报错',
+      message: error?.message || '函数声明解析报错，请检查语法',
     });
 
     return newFn();
@@ -307,7 +282,7 @@ const parseList = [];
 
 export function parseData(data, scope, ctx) {
   let res = data;
-  parseList.some((item) => {
+  parseList.some(item => {
     if (item.type(data)) {
       res = item.parseFunc(data, scope, ctx);
 
@@ -325,18 +300,16 @@ const parseCondition = (condition, scope, ctx) => {
   return condition == null ? true : parseData(condition, scope, ctx);
 };
 
-const parseLoopArgs = (_loop) => {
+const parseLoopArgs = _loop => {
   if (_loop) {
-    const { item, index, loopArgs = "" } = _loop;
-    const body = `return {${loopArgs[0] || "item"}: item, ${
-      loopArgs[1] || "index"
-    } : index }`;
-    return newFn("item,index", body)(item, index);
+    const { item, index, loopArgs = '' } = _loop;
+    const body = `return {${loopArgs[0] || 'item'}: item, ${loopArgs[1] || 'index'} : index }`;
+    return newFn('item,index', body)(item, index);
   }
   return undefined;
 };
 
-export const getIcon = (name) => window.TinyVueIcon?.[name]?.() || "";
+export const getIcon = name => window.TinyVueIcon?.[name]?.() || '';
 
 const parseObjectData = (data, scope, ctx) => {
   if (!data) {
@@ -349,13 +322,13 @@ const parseObjectData = (data, scope, ctx) => {
   }
 
   // 解析通过属性传递icon图标组件
-  if (data.componentName === "Icon") {
+  if (data.componentName === 'Icon') {
     return getIcon(data.props.name);
   }
   const res = {};
   Object.entries(data).forEach(([key, value]) => {
     // 如果是插槽则需要进行特殊处理
-    if (key === "slot" && value?.name) {
+    if (key === 'slot' && value?.name) {
       res[key] = value.name;
     } else {
       res[key] = parseData(value, scope, ctx);
@@ -363,19 +336,15 @@ const parseObjectData = (data, scope, ctx) => {
   });
 
   const propsEntries = Object.entries(data);
-  const modelValue = propsEntries.find(
-    ([_key, value]) => value?.type === JS_EXPRESSION && value?.model === true
-  );
-  const hasUpdateModelValue = propsEntries.find(
-    ([key]) => isOn(key) && key.startsWith(`onUpdate:${modelValue?.[0]}`)
-  );
+  const modelValue = propsEntries.find(([_key, value]) => value?.type === JS_EXPRESSION && value?.model === true);
+  const hasUpdateModelValue = propsEntries.find(([key]) => isOn(key) && key.startsWith(`onUpdate:${modelValue?.[0]}`));
 
   if (modelValue && !hasUpdateModelValue) {
     // 添加 onUpdate:modelKey 事件
     res[`onUpdate:${modelValue?.[0]}`] = parseData(
       {
         type: JS_FUNCTION,
-        value: `(value) => {debugger; ${modelValue[1].value}=value}`,
+        value: `(value) => {${modelValue[1].value}=value}`,
       },
       scope,
       ctx
@@ -385,12 +354,12 @@ const parseObjectData = (data, scope, ctx) => {
   return res;
 };
 
-const parseString = (data) => {
+const parseString = data => {
   return data.trim();
 };
 
 const parseArray = (data, scope, ctx) => {
-  return data.map((item) => parseData(item, scope, ctx));
+  return data.map(item => parseData(item, scope, ctx));
 };
 
 const parseFunction = (data, scope, ctx) => {
@@ -437,12 +406,12 @@ parseList.push(
 const generateSlotGroup = (children, isCustomElm, schema) => {
   const slotGroup = {};
 
-  children.forEach((child) => {
+  children.forEach(child => {
     const { componentName, children, params = [], props } = child;
-    const slot = child.slot || props?.slot?.name || props?.slot || "default";
-    const isNotEmptyTemplate = componentName === "Template" && children.length;
+    const slot = child.slot || props?.slot?.name || props?.slot || 'default';
+    const isNotEmptyTemplate = componentName === 'Template' && children.length;
 
-    isCustomElm && (child.props.slot = "slot"); // CE下需要给子节点加上slot标识
+    isCustomElm && (child.props.slot = 'slot'); // CE下需要给子节点加上slot标识
     slotGroup[slot] = slotGroup[slot] || {
       value: [],
       params,
@@ -456,19 +425,14 @@ const generateSlotGroup = (children, isCustomElm, schema) => {
 };
 
 const renderSlot = (children, scope, schema, isCustomElm) => {
-  if (children.some((a) => a.componentName === "Template")) {
+  if (children.some(a => a.componentName === 'Template')) {
     const slotGroup = generateSlotGroup(children, isCustomElm, schema);
     const slots = {};
 
-    Object.keys(slotGroup).forEach((slotName) => {
+    Object.keys(slotGroup).forEach(slotName => {
       const currentSlot = slotGroup[slotName];
 
-      slots[slotName] = ($scope) =>
-        renderDefault(
-          currentSlot.value,
-          { ...scope, ...$scope },
-          currentSlot.parent
-        );
+      slots[slotName] = $scope => renderDefault(currentSlot.value, { ...scope, ...$scope }, currentSlot.parent);
     });
 
     return slots;
@@ -477,14 +441,13 @@ const renderSlot = (children, scope, schema, isCustomElm) => {
   return { default: () => renderDefault(children, scope, schema) };
 };
 
-const checkGroup = (componentName) =>
-  configure[componentName]?.nestingRule?.childWhitelist?.length;
+const checkGroup = componentName => configure[componentName]?.nestingRule?.childWhitelist?.length;
 
 const getBindProps = (schema, scope, context) => {
   const { id, componentName } = schema;
   const invalidity = configure[componentName]?.invalidity || [];
 
-  if (componentName === "CanvasPlaceholder") {
+  if (componentName === 'CanvasPlaceholder') {
     return {};
   }
 
@@ -504,7 +467,7 @@ const getBindProps = (schema, scope, context) => {
   bindProps.draggable = true;
 
   // 过滤在门户网站上配置的画布丢弃的属性
-  invalidity.forEach((prop) => delete bindProps[prop]);
+  invalidity.forEach(prop => delete bindProps[prop]);
 
   return bindProps;
 };
@@ -526,7 +489,7 @@ const injectPlaceHolder = (componentName, children) => {
   if (configure[componentName]?.isContainer && (!children || isEmptyArr)) {
     return [
       {
-        componentName: "CanvasPlaceholder",
+        componentName: 'CanvasPlaceholder',
       },
     ];
   }
@@ -535,7 +498,7 @@ const injectPlaceHolder = (componentName, children) => {
 };
 
 const renderGroup = (children, scope, context) => {
-  return children.map?.((schema) => {
+  return children.map?.(schema => {
     const { componentName, children, loop, loopArgs, condition, id } = schema;
     const loopList = parseData(loop, scope, context);
 
@@ -571,7 +534,7 @@ const getChildren = (schema, mergeScope, context) => {
   const renderChildren = injectPlaceHolder(componentName, children);
 
   const component = getComponent(componentName);
-  const isNative = typeof component === "string";
+  const isNative = typeof component === 'string';
   const isCustomElm = customElements[componentName];
   const isGroup = checkGroup(componentName);
 
@@ -589,18 +552,20 @@ const getChildren = (schema, mergeScope, context) => {
 };
 
 export const renderer = {
-  name: "renderer",
+  name: 'renderer',
   props: {
     schema: Object,
     scope: Object,
     parent: Object,
   },
   setup(props) {
-    provide("schema", props.schema);
+    const context = inject('pageContext');
+    provide('schema', props.schema);
+
+    return { context };
   },
   render() {
-    const context = inject("pageContext");
-    const { scope, schema, parent } = this;
+    const { scope, schema, parent, context } = this;
     const { componentName, loop, loopArgs, condition } = schema;
 
     // 处理数据源和表格fetchData的映射关系
@@ -628,11 +593,7 @@ export const renderer = {
         return null;
       }
 
-      return h(
-        component,
-        getBindProps(schema, mergeScope, context),
-        getChildren(schema, mergeScope, context)
-      );
+      return h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context));
     };
 
     return loopList?.length ? loopList.map(renderElement) : renderElement();
