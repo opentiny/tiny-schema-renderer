@@ -10,29 +10,18 @@
  *
  */
 
-import { h, provide, inject } from "vue";
-import { isHTMLTag, hyphenate } from "@vue/shared";
-import babelPluginJSX from "@vue/babel-plugin-jsx";
-import { transformSync } from "@babel/core";
-import TinyVue, { Notify } from "@opentiny/vue";
-import {
-  CanvasRow,
-  CanvasCol,
-  CanvasRowColContainer,
-} from "@opentiny/tiny-engine-builtin-component";
-import {
-  CanvasBox,
-  CanvasIcon,
-  CanvasText,
-  CanvasSlot,
-  CanvasImg,
-  CanvasPlaceholder,
-} from "./builtin";
+import { h, provide, inject } from 'vue'
+import { isHTMLTag, hyphenate } from '@vue/shared'
+import babelPluginJSX from '@vue/babel-plugin-jsx'
+import { transformSync } from '@babel/core'
+import TinyVue, { Notify } from '@opentiny/vue'
+import { CanvasRow, CanvasCol, CanvasRowColContainer } from '@opentiny/tiny-engine-builtin-component'
+import { CanvasBox, CanvasIcon, CanvasText, CanvasSlot, CanvasImg, CanvasPlaceholder } from './builtin'
 
-const hyphenateRE = /\B([A-Z])/g;
-const customElements = {};
-const [JS_EXPRESSION, JS_FUNCTION] = ["JSExpression", "JSFunction"];
-const isOn = (key) => /^on[A-Z]\w*/.test(key);
+const hyphenateRE = /\B([A-Z])/g
+const customElements = {}
+const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction']
+const isOn = (key) => /^on[A-Z]\w*/.test(key)
 
 const transformJSX = (code) => {
   const res = transformSync(code, {
@@ -40,19 +29,19 @@ const transformJSX = (code) => {
       [
         babelPluginJSX,
         {
-          pragma: "h",
-          isCustomElement: (name) => customElements[name],
-        },
-      ],
-    ],
-  });
-  return (res.code || "")
-    .replace(/import \{.+\} from "vue";/, "")
+          pragma: 'h',
+          isCustomElement: (name) => customElements[name]
+        }
+      ]
+    ]
+  })
+  return (res.code || '')
+    .replace(/import \{.+\} from "vue";/, '')
     .replace(/h\(_?resolveComponent\((.*?)\)/g, `h(this.getComponent($1)`)
-    .replace(/_?resolveComponent/g, "h")
-    .replace(/_?createTextVNode\((.*?)\)/g, "$1")
-    .trim();
-};
+    .replace(/_?resolveComponent/g, 'h')
+    .replace(/_?createTextVNode\((.*?)\)/g, '$1')
+    .trim()
+}
 
 const Mapper = {
   Icon: CanvasIcon,
@@ -65,83 +54,79 @@ const Mapper = {
   CanvasRow,
   CanvasCol,
   CanvasRowColContainer,
-  CanvasPlaceholder,
-};
+  CanvasPlaceholder
+}
 
-export const collectionMethodsMap = {};
+export const collectionMethodsMap = {}
 
 const getNative = (name) => {
-  return TinyVue?.[name];
-};
+  return TinyVue?.[name]
+}
 
-const configure = {};
+const configure = {}
 
 export const setConfigure = (configureData) => {
-  Object.assign(configure, configureData);
-};
+  Object.assign(configure, configureData)
+}
 
 const isJSSlot = (data) => {
-  return data && data.type === "JSSlot";
-};
+  return data && data.type === 'JSSlot'
+}
 
 const isJSExpression = (data) => {
-  return data && data.type === "JSExpression";
-};
+  return data && data.type === 'JSExpression'
+}
 
 const isJSFunction = (data) => {
-  return data && data.type === "JSFunction";
-};
+  return data && data.type === 'JSFunction'
+}
 
 const isJSResource = (data) => {
-  return data && data.type === "JSResource";
-};
+  return data && data.type === 'JSResource'
+}
 
 const isString = (data) => {
-  return typeof data === "string";
-};
+  return typeof data === 'string'
+}
 
 const isArray = (data) => {
-  return Array.isArray(data);
-};
+  return Array.isArray(data)
+}
 
 const isFunction = (data) => {
-  return typeof data === "function";
-};
+  return typeof data === 'function'
+}
 
 const isObject = (data) => {
-  return typeof data === "object";
-};
+  return typeof data === 'object'
+}
 
 // 判断是否是状态访问器
 export const isStateAccessor = (stateData) =>
-  stateData?.accessor?.getter?.type === "JSFunction" ||
-  stateData?.accessor?.setter?.type === "JSFunction";
+  stateData?.accessor?.getter?.type === 'JSFunction' || stateData?.accessor?.setter?.type === 'JSFunction'
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
-  const Fn = Function;
-  return new Fn(...argv);
-};
+  const Fn = Function
+  return new Fn(...argv)
+}
 
 const parseExpression = (data, scope, ctx, isJsx = false) => {
   try {
-    const expression = isJsx ? transformJSX(data.value) : data.value;
-    return newFn("$scope", `with($scope || {}) { return ${expression} }`).call(
-      ctx,
-      {
-        ...ctx,
-        ...scope,
-        slotScope: scope,
-      }
-    );
+    const expression = isJsx ? transformJSX(data.value) : data.value
+    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(ctx, {
+      ...ctx,
+      ...scope,
+      slotScope: scope
+    })
   } catch (err) {
     // 解析抛出异常，则再尝试解析 JSX 语法。如果解析 JSX 语法仍然出现错误，isJsx 变量会确保不会再次递归执行解析
     if (!isJsx) {
-      return parseExpression(data, scope, ctx, true);
+      return parseExpression(data, scope, ctx, true)
     }
-    return undefined;
+    return undefined
   }
-};
+}
 
 const renderDefault = (children, scope, parent) =>
   children.map?.((child) =>
@@ -149,32 +134,32 @@ const renderDefault = (children, scope, parent) =>
     h(renderer, {
       schema: child,
       scope,
-      parent,
+      parent
     })
-  );
+  )
 
 const parseJSSlot = (data, scope) => {
-  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, data);
-};
+  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, data)
+}
 
 export const generateFn = (innerFn, context) => {
   return (...args) => {
     // 如果有数据源标识，则表格的fetchData返回数据源的静态数据
-    const sourceId = collectionMethodsMap[innerFn.realName || innerFn.name];
+    const sourceId = collectionMethodsMap[innerFn.realName || innerFn.name]
     if (sourceId) {
-      return innerFn.call(context, ...args);
+      return innerFn.call(context, ...args)
     } else {
-      let result = null;
+      let result = null
 
       // 这里是为了兼容用户写法报错导致画布异常，但无法捕获promise内部的异常
       try {
-        result = innerFn.call(context, ...args);
+        result = innerFn.call(context, ...args)
       } catch (error) {
         Notify({
-          type: "warning",
+          type: 'warning',
           title: `函数:${innerFn.name}执行报错`,
-          message: error?.message || `函数:${innerFn.name}执行报错，请检查语法`,
-        });
+          message: error?.message || `函数:${innerFn.name}执行报错，请检查语法`
+        })
       }
 
       // 这里注意如果innerFn返回的是一个promise则需要捕获异常，重新返回默认一条空数据
@@ -182,332 +167,303 @@ export const generateFn = (innerFn, context) => {
         result = new Promise((resolve) => {
           result.then(resolve).catch((error) => {
             Notify({
-              type: "warning",
-              title: "异步函数执行报错",
-              message: error?.message || "异步函数执行报错，请检查语法",
-            });
+              type: 'warning',
+              title: '异步函数执行报错',
+              message: error?.message || '异步函数执行报错，请检查语法'
+            })
             // 这里需要至少返回一条空数据，方便用户使用表格默认插槽
             resolve({
               result: [{}],
-              page: { total: 1 },
-            });
-          });
-        });
+              page: { total: 1 }
+            })
+          })
+        })
       }
 
-      return result;
+      return result
     }
-  };
-};
+  }
+}
 
 // 解析函数字符串结构
 const parseFunctionString = (fnStr) => {
-  const fnRegexp = /(async)?.*?(\w+) *\(([\s\S]*?)\) *\{([\s\S]*)\}/;
-  const result = fnRegexp.exec(fnStr);
+  const fnRegexp = /(async)?.*?(\w+) *\(([\s\S]*?)\) *\{([\s\S]*)\}/
+  const result = fnRegexp.exec(fnStr)
   if (result) {
     return {
-      type: result[1] || "",
+      type: result[1] || '',
       name: result[2],
       params: result[3]
-        .split(",")
+        .split(',')
         .map((item) => item.trim())
         .filter((item) => Boolean(item)),
-      body: result[4],
-    };
+      body: result[4]
+    }
   }
-  return null;
-};
+  return null
+}
 
 const getPlainProps = (object = {}) => {
-  const { slot, ...rest } = object;
-  const props = {};
+  const { slot, ...rest } = object
+  const props = {}
 
   if (slot) {
-    rest.slot = slot.name || slot;
+    rest.slot = slot.name || slot
   }
 
   Object.entries(rest).forEach(([key, value]) => {
-    let renderKey = key;
+    let renderKey = key
 
     // html 标签属性会忽略大小写，所以传递包含大写的 props 需要转换为 kebab 形式的 props
     if (!/on[A-Z]/.test(renderKey) && hyphenateRE.test(renderKey)) {
-      renderKey = hyphenate(renderKey);
+      renderKey = hyphenate(renderKey)
     }
 
-    if (["boolean", "string", "number"].includes(typeof value)) {
-      props[renderKey] = value;
+    if (['boolean', 'string', 'number'].includes(typeof value)) {
+      props[renderKey] = value
     } else {
       // 如果传给webcomponent标签的是对象或者数组需要使用.prop修饰符，转化成h函数就是如下写法
-      props[`.${renderKey}`] = value;
+      props[`.${renderKey}`] = value
     }
-  });
-  return props;
-};
+  })
+  return props
+}
 
 const generateCollection = (schema) => {
-  if (
-    schema.componentName === "Collection" &&
-    schema.props?.dataSource &&
-    schema.children
-  ) {
+  if (schema.componentName === 'Collection' && schema.props?.dataSource && schema.children) {
     schema.children.forEach((item) => {
-      const fetchData = item.props?.fetchData;
-      const methodMatch = fetchData?.value?.match(/this\.(.+?)}/);
+      const fetchData = item.props?.fetchData
+      const methodMatch = fetchData?.value?.match(/this\.(.+?)}/)
       if (fetchData && methodMatch?.[1]) {
-        const methodName = methodMatch[1].trim();
+        const methodName = methodMatch[1].trim()
         // 缓存表格fetchData对应的数据源信息
-        collectionMethodsMap[methodName] = schema.props.dataSource;
+        collectionMethodsMap[methodName] = schema.props.dataSource
       }
-    });
+    })
   }
-};
+}
 
 export const getComponent = (name) => {
-  return (
-    Mapper[name] ||
-    getNative(name) ||
-    customElements[name] ||
-    (isHTMLTag(name) ? name : null)
-  );
-};
+  return Mapper[name] || getNative(name) || customElements[name] || (isHTMLTag(name) ? name : null)
+}
 
 // 解析JSX字符串为可执行函数
 const parseJSXFunction = (data, ctx) => {
   try {
-    const newValue = transformJSX(data.value);
-    const fnInfo = parseFunctionString(newValue);
-    if (!fnInfo)
-      throw Error("函数解析失败，请检查格式。示例：function fnName() { }");
+    const newValue = transformJSX(data.value)
+    const fnInfo = parseFunctionString(newValue)
+    if (!fnInfo) throw Error('函数解析失败，请检查格式。示例：function fnName() { }')
 
     return newFn(...fnInfo.params, fnInfo.body).bind({
       ...ctx,
-      getComponent,
-    });
+      getComponent
+    })
   } catch (error) {
     Notify({
-      type: "warning",
-      title: "函数声明解析报错",
-      message: error?.message || "函数声明解析报错，请检查语法",
-    });
+      type: 'warning',
+      title: '函数声明解析报错',
+      message: error?.message || '函数声明解析报错，请检查语法'
+    })
 
-    return newFn();
+    return newFn()
   }
-};
+}
 
 const parseJSFunction = (data, scope, ctx) => {
   try {
-    const innerFn = newFn(`return ${data.value}`).bind(ctx)();
-    return generateFn(innerFn, ctx);
+    const innerFn = newFn(`return ${data.value}`).bind(ctx)()
+    return generateFn(innerFn, ctx)
   } catch (error) {
-    return parseJSXFunction(data, ctx);
+    return parseJSXFunction(data, ctx)
   }
-};
+}
 
-const parseList = [];
+const parseList = []
 
 export function parseData(data, scope, ctx) {
-  let res = data;
+  let res = data
   parseList.some((item) => {
     if (item.type(data)) {
-      res = item.parseFunc(data, scope, ctx);
+      res = item.parseFunc(data, scope, ctx)
 
-      return true;
+      return true
     }
 
-    return false;
-  });
+    return false
+  })
 
-  return res;
+  return res
 }
 
 const parseCondition = (condition, scope, ctx) => {
   // eslint-disable-next-line no-eq-null
-  return condition == null ? true : parseData(condition, scope, ctx);
-};
+  return condition == null ? true : parseData(condition, scope, ctx)
+}
 
 const parseLoopArgs = (_loop) => {
   if (_loop) {
-    const { item, index, loopArgs = "" } = _loop;
-    const body = `return {${loopArgs[0] || "item"}: item, ${
-      loopArgs[1] || "index"
-    } : index }`;
-    return newFn("item,index", body)(item, index);
+    const { item, index, loopArgs = '' } = _loop
+    const body = `return {${loopArgs[0] || 'item'}: item, ${loopArgs[1] || 'index'} : index }`
+    return newFn('item,index', body)(item, index)
   }
-  return undefined;
-};
+  return undefined
+}
 
-export const getIcon = (name) => window.TinyVueIcon?.[name]?.() || "";
+export const getIcon = (name) => window.TinyVueIcon?.[name]?.() || ''
 
 const parseObjectData = (data, scope, ctx) => {
   if (!data) {
-    return data;
+    return data
   }
 
   // 如果是状态访问器,则直接解析默认值
   if (isStateAccessor(data)) {
-    return parseData(data.defaultValue);
+    return parseData(data.defaultValue)
   }
 
   // 解析通过属性传递icon图标组件
-  if (data.componentName === "Icon") {
-    return getIcon(data.props.name);
+  if (data.componentName === 'Icon') {
+    return getIcon(data.props.name)
   }
-  const res = {};
+  const res = {}
   Object.entries(data).forEach(([key, value]) => {
     // 如果是插槽则需要进行特殊处理
-    if (key === "slot" && value?.name) {
-      res[key] = value.name;
+    if (key === 'slot' && value?.name) {
+      res[key] = value.name
     } else {
-      res[key] = parseData(value, scope, ctx);
+      res[key] = parseData(value, scope, ctx)
     }
-  });
+  })
 
-  const propsEntries = Object.entries(data);
-  const modelValue = propsEntries.find(
-    ([_key, value]) => value?.type === JS_EXPRESSION && value?.model === true
-  );
-  const hasUpdateModelValue = propsEntries.find(
-    ([key]) => isOn(key) && key.startsWith(`onUpdate:${modelValue?.[0]}`)
-  );
+  const propsEntries = Object.entries(data)
+  const modelValue = propsEntries.find(([_key, value]) => value?.type === JS_EXPRESSION && value?.model === true)
+  const hasUpdateModelValue = propsEntries.find(([key]) => isOn(key) && key.startsWith(`onUpdate:${modelValue?.[0]}`))
 
   if (modelValue && !hasUpdateModelValue) {
     // 添加 onUpdate:modelKey 事件
     res[`onUpdate:${modelValue?.[0]}`] = parseData(
       {
         type: JS_FUNCTION,
-        value: `(value) => ${modelValue[1].value}=value`,
+        value: `(value) => ${modelValue[1].value}=value`
       },
       scope,
       ctx
-    );
+    )
   }
 
-  return res;
-};
+  return res
+}
 
 const parseString = (data) => {
-  return data.trim();
-};
+  return data.trim()
+}
 
 const parseArray = (data, scope, ctx) => {
-  return data.map((item) => parseData(item, scope, ctx));
-};
+  return data.map((item) => parseData(item, scope, ctx))
+}
 
 const parseFunction = (data, scope, ctx) => {
-  return data.bind(ctx);
-};
+  return data.bind(ctx)
+}
 
 parseList.push(
   ...[
     {
       type: isJSExpression,
-      parseFunc: parseExpression,
+      parseFunc: parseExpression
     },
     {
       type: isJSFunction,
-      parseFunc: parseJSFunction,
+      parseFunc: parseJSFunction
     },
     {
       type: isJSResource,
-      parseFunc: parseExpression,
+      parseFunc: parseExpression
     },
     {
       type: isJSSlot,
-      parseFunc: parseJSSlot,
+      parseFunc: parseJSSlot
     },
     {
       type: isString,
-      parseFunc: parseString,
+      parseFunc: parseString
     },
     {
       type: isArray,
-      parseFunc: parseArray,
+      parseFunc: parseArray
     },
     {
       type: isFunction,
-      parseFunc: parseFunction,
+      parseFunc: parseFunction
     },
     {
       type: isObject,
-      parseFunc: parseObjectData,
-    },
+      parseFunc: parseObjectData
+    }
   ]
-);
+)
 
 const generateSlotGroup = (children, isCustomElm, schema) => {
-  const slotGroup = {};
+  const slotGroup = {}
 
   children.forEach((child) => {
-    const { componentName, children, params = [], props } = child;
-    const slot = child.slot || props?.slot?.name || props?.slot || "default";
-    const isNotEmptyTemplate = componentName === "Template" && children.length;
+    const { componentName, children, params = [], props } = child
+    const slot = child.slot || props?.slot?.name || props?.slot || 'default'
+    const isNotEmptyTemplate = componentName === 'Template' && children.length
 
-    isCustomElm && (child.props.slot = "slot"); // CE下需要给子节点加上slot标识
+    isCustomElm && (child.props.slot = 'slot') // CE下需要给子节点加上slot标识
     slotGroup[slot] = slotGroup[slot] || {
       value: [],
       params,
-      parent: isNotEmptyTemplate ? child : schema,
-    };
+      parent: isNotEmptyTemplate ? child : schema
+    }
 
-    slotGroup[slot].value.push(...(isNotEmptyTemplate ? children : [child])); // template 标签直接过滤掉
-  });
+    slotGroup[slot].value.push(...(isNotEmptyTemplate ? children : [child])) // template 标签直接过滤掉
+  })
 
-  return slotGroup;
-};
+  return slotGroup
+}
 
 const renderSlot = (children, scope, schema, isCustomElm) => {
-  if (children.some((a) => a.componentName === "Template")) {
-    const slotGroup = generateSlotGroup(children, isCustomElm, schema);
-    const slots = {};
+  if (children.some((a) => a.componentName === 'Template')) {
+    const slotGroup = generateSlotGroup(children, isCustomElm, schema)
+    const slots = {}
 
     Object.keys(slotGroup).forEach((slotName) => {
-      const currentSlot = slotGroup[slotName];
+      const currentSlot = slotGroup[slotName]
 
-      slots[slotName] = ($scope) =>
-        renderDefault(
-          currentSlot.value,
-          { ...scope, ...$scope },
-          currentSlot.parent
-        );
-    });
+      slots[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, currentSlot.parent)
+    })
 
-    return slots;
+    return slots
   }
 
-  return { default: () => renderDefault(children, scope, schema) };
-};
+  return { default: () => renderDefault(children, scope, schema) }
+}
 
-const checkGroup = (componentName) =>
-  configure[componentName]?.nestingRule?.childWhitelist?.length;
+const checkGroup = (componentName) => configure[componentName]?.nestingRule?.childWhitelist?.length
 
 const getBindProps = (schema, scope, context) => {
-  const { id, componentName } = schema;
-  const invalidity = configure[componentName]?.invalidity || [];
+  const { componentName } = schema
 
-  if (componentName === "CanvasPlaceholder") {
-    return {};
+  if (componentName === 'CanvasPlaceholder') {
+    return {}
   }
 
   const bindProps = {
-    ...parseData(schema.props, scope, context),
-  };
+    ...parseData(schema.props, scope, context)
+  }
 
   if (Mapper[componentName]) {
-    bindProps.schema = schema;
+    bindProps.schema = schema
   }
 
   // 绑定组件属性时需要将 className 重命名为 class，防止覆盖组件内置 class
-  bindProps.class = bindProps.className;
-  delete bindProps.className;
+  bindProps.class = bindProps.className
+  delete bindProps.className
 
-  // 使画布中元素可拖拽
-  bindProps.draggable = true;
-
-  // 过滤在门户网站上配置的画布丢弃的属性
-  invalidity.forEach((prop) => delete bindProps[prop]);
-
-  return bindProps;
-};
+  return bindProps
+}
 
 const getLoopScope = ({ scope, index, item, loopArgs }) => {
   return {
@@ -515,43 +471,43 @@ const getLoopScope = ({ scope, index, item, loopArgs }) => {
     ...(parseLoopArgs({
       item,
       index,
-      loopArgs,
-    }) || {}),
-  };
-};
+      loopArgs
+    }) || {})
+  }
+}
 
 const injectPlaceHolder = (componentName, children) => {
-  const isEmptyArr = Array.isArray(children) && !children.length;
+  const isEmptyArr = Array.isArray(children) && !children.length
 
   if (configure[componentName]?.isContainer && (!children || isEmptyArr)) {
     return [
       {
-        componentName: "CanvasPlaceholder",
-      },
-    ];
+        componentName: 'CanvasPlaceholder'
+      }
+    ]
   }
 
-  return children;
-};
+  return children
+}
 
 const renderGroup = (children, scope, context) => {
   return children.map?.((schema) => {
-    const { componentName, children, loop, loopArgs, condition, id } = schema;
-    const loopList = parseData(loop, scope, context);
+    const { componentName, children, loop, loopArgs, condition, id } = schema
+    const loopList = parseData(loop, scope, context)
 
     const renderElement = (item, index) => {
       const mergeScope = getLoopScope({
         scope,
         index,
         item,
-        loopArgs,
-      });
+        loopArgs
+      })
 
       if (!parseCondition(condition, mergeScope, context)) {
-        return null;
+        return null
       }
 
-      const renderChildren = injectPlaceHolder(componentName, children);
+      const renderChildren = injectPlaceHolder(componentName, children)
 
       return h(
         getComponent(componentName),
@@ -559,60 +515,60 @@ const renderGroup = (children, scope, context) => {
         Array.isArray(renderChildren)
           ? renderSlot(renderChildren, mergeScope, schema)
           : parseData(renderChildren, mergeScope, context)
-      );
-    };
+      )
+    }
 
-    return loopList?.length ? loopList.map(renderElement) : renderElement();
-  });
-};
+    return loopList?.length ? loopList.map(renderElement) : renderElement()
+  })
+}
 
 const getChildren = (schema, mergeScope, context) => {
-  const { componentName, children } = schema;
-  const renderChildren = injectPlaceHolder(componentName, children);
+  const { componentName, children } = schema
+  const renderChildren = injectPlaceHolder(componentName, children)
 
-  const component = getComponent(componentName);
-  const isNative = typeof component === "string";
-  const isCustomElm = customElements[componentName];
-  const isGroup = checkGroup(componentName);
+  const component = getComponent(componentName)
+  const isNative = typeof component === 'string'
+  const isCustomElm = customElements[componentName]
+  const isGroup = checkGroup(componentName)
 
   if (Array.isArray(renderChildren)) {
     if (isNative || isCustomElm) {
-      return renderDefault(renderChildren, mergeScope, schema);
+      return renderDefault(renderChildren, mergeScope, schema)
     } else {
       return isGroup
         ? renderGroup(renderChildren, mergeScope, context)
-        : renderSlot(renderChildren, mergeScope, schema, isCustomElm);
+        : renderSlot(renderChildren, mergeScope, schema, isCustomElm)
     }
   } else {
-    return parseData(renderChildren, mergeScope, context);
+    return parseData(renderChildren, mergeScope, context)
   }
-};
+}
 
 export const renderer = {
-  name: "renderer",
+  name: 'renderer',
   props: {
     schema: Object,
     scope: Object,
-    parent: Object,
+    parent: Object
   },
   setup(props) {
-    provide("schema", props.schema);
+    provide('schema', props.schema)
   },
   render() {
-    const context = inject("pageContext");
-    const { scope, schema, parent } = this;
-    const { componentName, loop, loopArgs, condition } = schema;
+    const context = inject('pageContext')
+    const { scope, schema } = this
+    const { componentName, loop, loopArgs, condition } = schema
 
     // 处理数据源和表格fetchData的映射关系
-    generateCollection(schema);
+    generateCollection(schema)
 
     if (!componentName) {
-      return parseData(schema, scope, context);
+      return parseData(schema, scope, context)
     }
 
-    const component = getComponent(componentName);
+    const component = getComponent(componentName)
 
-    const loopList = parseData(loop, scope, context);
+    const loopList = parseData(loop, scope, context)
 
     const renderElement = (item, index) => {
       let mergeScope = item
@@ -620,23 +576,19 @@ export const renderer = {
             item,
             index,
             loopArgs,
-            scope,
+            scope
           })
-        : scope;
+        : scope
 
       if (!parseCondition(condition, mergeScope, context)) {
-        return null;
+        return null
       }
 
-      return h(
-        component,
-        getBindProps(schema, mergeScope, context),
-        getChildren(schema, mergeScope, context)
-      );
-    };
+      return h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context))
+    }
 
-    return loopList?.length ? loopList.map(renderElement) : renderElement();
-  },
-};
+    return loopList?.length ? loopList.map(renderElement) : renderElement()
+  }
+}
 
-export default renderer;
+export default renderer
