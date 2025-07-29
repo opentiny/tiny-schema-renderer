@@ -15,8 +15,23 @@ import { isHTMLTag, hyphenate } from '@vue/shared'
 import babelPluginJSX from '@vue/babel-plugin-jsx'
 import { transformSync } from '@babel/core'
 import TinyVue, { Notify } from '@opentiny/vue'
-import { CanvasRow, CanvasCol, CanvasRowColContainer } from '@opentiny/tiny-engine-builtin-component'
-import { CanvasBox, CanvasIcon, CanvasText, CanvasSlot, CanvasImg, CanvasPlaceholder } from './builtin'
+import {
+  CanvasRow,
+  CanvasCol,
+  CanvasRowColContainer,
+  CanvasFlexBox,
+  CanvasSection
+} from '@opentiny/tiny-engine-builtin-component'
+import {
+  CanvasBox,
+  CanvasIcon,
+  CanvasText,
+  CanvasSlot,
+  CanvasImg,
+  CanvasPlaceholder,
+  CanvasRouterLink,
+  CanvasRouterView
+} from './builtin'
 
 const hyphenateRE = /\B([A-Z])/g
 const customElements = {}
@@ -54,7 +69,11 @@ const Mapper = {
   CanvasRow,
   CanvasCol,
   CanvasRowColContainer,
-  CanvasPlaceholder
+  CanvasFlexBox,
+  CanvasSection,
+  CanvasPlaceholder,
+  CanvasRouterLink,
+  CanvasRouterView
 }
 
 export const collectionMethodsMap = {}

@@ -35,7 +35,7 @@
   "type": "module",
   "dependencies": {
     "@babel/core": "7.18.13",
-    "@opentiny/tiny-engine-builtin-component": "2.2.0",
+    "@opentiny/tiny-engine-builtin-component": "^2.6.0",
     "@vue/babel-plugin-jsx": "^1.2.5",
     "@vue/shared": "^3.3.4"
   },
