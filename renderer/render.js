@@ -147,15 +147,43 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
   }
 }
 
-const renderDefault = (children, scope, parent) =>
-  children.map?.((child) =>
-    // eslint-disable-next-line no-use-before-define
-    h(renderer, {
-      schema: child,
-      scope,
-      parent
-    })
-  )
+function renderComponent(schema, scope, parent) {
+  const { componentName, loop, loopArgs, condition } = schema
+
+  // 处理数据源和表格fetchData的映射关系
+  generateCollection(schema)
+
+  if (!componentName) {
+    return parseData(schema, scope, parent)
+  }
+
+  const component = getComponent(componentName)
+
+  const loopList = parseData(loop, scope)
+
+  const renderElement = (item, index) => {
+    let mergeScope = item
+      ? getLoopScope({
+          item,
+          index,
+          loopArgs,
+          scope
+        })
+      : scope
+
+    if (!parseCondition(condition, mergeScope)) {
+      return null
+    }
+
+    const Ele = h(component, getBindProps(schema, mergeScope), getChildren(schema, mergeScope))
+
+    return Ele
+  }
+
+  return loopList?.length ? loopList.map(renderElement) : renderElement()
+}
+
+const renderDefault = (children, scope, parent) => children.map?.((child) => renderComponent(child, scope, parent))
 
 const parseJSSlot = (data, scope) => {
   return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, data)
@@ -462,6 +490,8 @@ const renderSlot = (children, scope, schema, isCustomElm) => {
 
 const checkGroup = (componentName) => configure[componentName]?.nestingRule?.childWhitelist?.length
 
+const directChildrenHasTemplate = (children) => children.some((child) => child.componentName === 'Template')
+
 const getBindProps = (schema, scope, context) => {
   const { componentName } = schema
 
@@ -545,22 +575,21 @@ const getChildren = (schema, mergeScope, context) => {
   const { componentName, children } = schema
   const renderChildren = injectPlaceHolder(componentName, children)
 
-  const component = getComponent(componentName)
-  const isNative = typeof component === 'string'
-  const isCustomElm = customElements[componentName]
-  const isGroup = checkGroup(componentName)
-
-  if (Array.isArray(renderChildren)) {
-    if (isNative || isCustomElm) {
-      return renderDefault(renderChildren, mergeScope, schema)
-    } else {
-      return isGroup
-        ? renderGroup(renderChildren, mergeScope, context)
-        : renderSlot(renderChildren, mergeScope, schema, isCustomElm)
-    }
-  } else {
+  if (!Array.isArray(renderChildren)) {
     return parseData(renderChildren, mergeScope, context)
   }
+
+  if (!renderChildren.length) {
+    return null
+  }
+
+  const isCustomElm = customElements[componentName]
+
+  if (directChildrenHasTemplate(renderChildren)) {
+    return renderSlot(renderChildren, mergeScope, schema, isCustomElm)
+  }
+
+  return renderGroup(renderChildren, mergeScope, context)
 }
 
 export const renderer = {
@@ -576,37 +605,8 @@ export const renderer = {
   render() {
     const context = inject('pageContext')
     const { scope, schema } = this
-    const { componentName, loop, loopArgs, condition } = schema
 
-    // 处理数据源和表格fetchData的映射关系
-    generateCollection(schema)
-
-    if (!componentName) {
-      return parseData(schema, scope, context)
-    }
-
-    const component = getComponent(componentName)
-
-    const loopList = parseData(loop, scope, context)
-
-    const renderElement = (item, index) => {
-      let mergeScope = item
-        ? getLoopScope({
-            item,
-            index,
-            loopArgs,
-            scope
-          })
-        : scope
-
-      if (!parseCondition(condition, mergeScope, context)) {
-        return null
-      }
-
-      return h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context))
-    }
-
-    return loopList?.length ? loopList.map(renderElement) : renderElement()
+    return renderComponent(schema, scope, context)
   }
 }
 
