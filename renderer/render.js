@@ -34,7 +34,7 @@ import {
 } from './builtin'
 
 const hyphenateRE = /\B([A-Z])/g
-const customElements = {}
+export const customElements = {}
 const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction']
 const isOn = (key) => /^on[A-Z]\w*/.test(key)
 
@@ -58,7 +58,7 @@ const transformJSX = (code) => {
     .trim()
 }
 
-const Mapper = {
+export const Mapper = {
   Icon: CanvasIcon,
   Text: CanvasText,
   div: CanvasBox,
