@@ -589,7 +589,11 @@ const getChildren = (schema, mergeScope, context) => {
     return renderSlot(renderChildren, mergeScope, schema, isCustomElm)
   }
 
-  return renderGroup(renderChildren, mergeScope, context)
+  // 这里 children 需要返回一个默认插槽的函数，避免 vue 告警：
+  // Non-function value encountered for default slot. Prefer function slots for better performance.
+  return {
+    default: () => renderGroup(renderChildren, mergeScope, context)
+  }
 }
 
 export const renderer = {
