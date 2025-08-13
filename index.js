@@ -1,3 +1,5 @@
-import Renderer from "./renderer/RenderMain";
+import Renderer from './renderer/RenderMain'
 
-export default Renderer;
+export { customElements, Mapper } from './renderer/render'
+
+export default Renderer
