@@ -2,6 +2,9 @@ import { shallowReactive } from "vue";
 
 export default () => {
   const context = shallowReactive({});
+  const oldSchema = {
+    value:null
+  }
 
   // 从大纲树控制隐藏
 
@@ -14,6 +17,7 @@ export default () => {
 
   return {
     context,
+    oldSchema,
     setContext,
     getContext,
   };

@@ -11,6 +11,7 @@
  */
 
 import { h, provide, nextTick, reactive, shallowReactive, watchEffect } from "vue";
+import _ from "lodash";
 import Loading from "./Loading.vue";
 import renderer, { parseData } from "./render";
 import useContext from "./useContext";
@@ -23,7 +24,7 @@ export default {
     },
   },
   setup(props) {
-    const { context, setContext, getContext } = useContext();
+    const { context, oldSchema, setContext, getContext } = useContext();
     const reset = (obj) => {
       Object.keys(obj).forEach((key) => delete obj[key]);
     };
@@ -100,9 +101,14 @@ export default {
     };
 
     watchEffect(() => {
-      if (!props.schema || !Object.keys(props.schema)) {
+
+      // 最后一个判断与上一次的schema做比较，以解决组件循环刷新问题
+      if (!props.schema || !Object.keys(props.schema) || _.isEqual(props.schema, oldSchema.value) ) {
         return;
       }
+
+      // 缓存schema
+      oldSchema.value = _.cloneDeep(props.schema)
 
       setSchema(props.schema);
     });
