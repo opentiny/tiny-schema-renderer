@@ -159,6 +159,10 @@ function renderComponent(schema, scope, parent) {
 
   const component = getComponent(componentName)
 
+  if (!component) {
+    return null
+  }
+
   const loopList = parseData(loop, scope)
 
   const renderElement = (item, index) => {
@@ -183,7 +187,8 @@ function renderComponent(schema, scope, parent) {
   return loopList?.length ? loopList.map(renderElement) : renderElement()
 }
 
-const renderDefault = (children, scope, parent) => children.map?.((child) => renderComponent(child, scope, parent))
+const renderDefault = (children, scope, parent) =>
+  children.map?.((child) => renderComponent(child, scope, parent)).filter(Boolean)
 
 const parseJSSlot = (data, scope) => {
   return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, data)
@@ -540,35 +545,42 @@ const injectPlaceHolder = (componentName, children) => {
 }
 
 const renderGroup = (children, scope, context) => {
-  return children.map?.((schema) => {
-    const { componentName, children, loop, loopArgs, condition, id } = schema
-    const loopList = parseData(loop, scope, context)
+  return children
+    .map?.((schema) => {
+      const { componentName, children, loop, loopArgs, condition, id } = schema
 
-    const renderElement = (item, index) => {
-      const mergeScope = getLoopScope({
-        scope,
-        index,
-        item,
-        loopArgs
-      })
-
-      if (!parseCondition(condition, mergeScope, context)) {
+      if (!componentName) {
         return null
       }
 
-      const renderChildren = injectPlaceHolder(componentName, children)
+      const loopList = parseData(loop, scope, context)
 
-      return h(
-        getComponent(componentName),
-        getBindProps(schema, mergeScope, context),
-        Array.isArray(renderChildren)
-          ? renderSlot(renderChildren, mergeScope, schema)
-          : parseData(renderChildren, mergeScope, context)
-      )
-    }
+      const renderElement = (item, index) => {
+        const mergeScope = getLoopScope({
+          scope,
+          index,
+          item,
+          loopArgs
+        })
 
-    return loopList?.length ? loopList.map(renderElement) : renderElement()
-  })
+        if (!parseCondition(condition, mergeScope, context)) {
+          return null
+        }
+
+        const renderChildren = injectPlaceHolder(componentName, children)
+
+        return h(
+          getComponent(componentName),
+          getBindProps(schema, mergeScope, context),
+          Array.isArray(renderChildren)
+            ? renderSlot(renderChildren, mergeScope, schema)
+            : parseData(renderChildren, mergeScope, context)
+        )
+      }
+
+      return loopList?.length ? loopList.map(renderElement) : renderElement()
+    })
+    .filter(Boolean)
 }
 
 const getChildren = (schema, mergeScope, context) => {
@@ -592,7 +604,7 @@ const getChildren = (schema, mergeScope, context) => {
   // 这里 children 需要返回一个默认插槽的函数，避免 vue 告警：
   // Non-function value encountered for default slot. Prefer function slots for better performance.
   return {
-    default: () => renderGroup(renderChildren, mergeScope, context)
+    default: () => renderGroup(renderChildren, mergeScope, context).filter(Boolean)
   }
 }
 
