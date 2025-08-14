@@ -154,7 +154,7 @@ function renderComponent(schema, scope, parent) {
   generateCollection(schema)
 
   if (!componentName) {
-    return parseData(schema, scope, parent)
+    return null
   }
 
   const component = getComponent(componentName)
