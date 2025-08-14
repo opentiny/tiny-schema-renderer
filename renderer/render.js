@@ -553,6 +553,12 @@ const renderGroup = (children, scope, context) => {
         return null
       }
 
+      const component = getComponent(componentName)
+
+      if (!component) {
+        return null
+      }
+
       const loopList = parseData(loop, scope, context)
 
       const renderElement = (item, index) => {
@@ -570,7 +576,7 @@ const renderGroup = (children, scope, context) => {
         const renderChildren = injectPlaceHolder(componentName, children)
 
         return h(
-          getComponent(componentName),
+          component,
           getBindProps(schema, mergeScope, context),
           Array.isArray(renderChildren)
             ? renderSlot(renderChildren, mergeScope, schema)
