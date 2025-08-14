@@ -175,7 +175,7 @@ function renderComponent(schema, scope, parent) {
       return null
     }
 
-    const Ele = h(component, getBindProps(schema, mergeScope), () => getChildren(schema, mergeScope))
+    const Ele = h(component, getBindProps(schema, mergeScope), getChildren(schema, mergeScope))
 
     return Ele
   }
