@@ -187,7 +187,7 @@ function renderComponent(schema, scope, context) {
         })
       : scope
 
-    if (!parseCondition(condition, mergeScope)) {
+    if (!parseCondition(condition, mergeScope, context)) {
       return null
     }
 
