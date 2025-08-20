@@ -147,7 +147,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
   }
 }
 
-function renderComponent(schema, scope, parent) {
+function renderComponent(schema, scope, context) {
   const { componentName, loop, loopArgs, condition } = schema
 
   // 处理数据源和表格fetchData的映射关系
@@ -163,7 +163,7 @@ function renderComponent(schema, scope, parent) {
     return null
   }
 
-  const loopList = parseData(loop, scope)
+  const loopList = parseData(loop, scope, context)
 
   const renderElement = (item, index) => {
     let mergeScope = item
@@ -179,7 +179,7 @@ function renderComponent(schema, scope, parent) {
       return null
     }
 
-    const Ele = h(component, getBindProps(schema, mergeScope), getChildren(schema, mergeScope))
+    const Ele = h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context))
 
     return Ele
   }
@@ -187,8 +187,11 @@ function renderComponent(schema, scope, parent) {
   return loopList?.length ? loopList.map(renderElement) : renderElement()
 }
 
-const renderDefault = (children, scope, parent) =>
-  children.map?.((child) => renderComponent(child, scope, parent)).filter(Boolean)
+const renderDefault = (children, scope, parent) => {
+  const childrenComponents = children.map?.((child) => renderComponent(child, scope, parent))
+
+  return childrenComponents.filter(Boolean)
+}
 
 const parseJSSlot = (data, scope) => {
   return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, data)
@@ -370,7 +373,7 @@ const parseObjectData = (data, scope, ctx) => {
 
   // 如果是状态访问器,则直接解析默认值
   if (isStateAccessor(data)) {
-    return parseData(data.defaultValue)
+    return parseData(data.defaultValue, scope, ctx)
   }
 
   // 解析通过属性传递icon图标组件
@@ -505,7 +508,9 @@ const getBindProps = (schema, scope, context) => {
   }
 
   const bindProps = {
-    ...parseData(schema.props, scope, context)
+    ...parseData(schema.props, scope, context),
+    'data-id': schema.id,
+    'data-tag': componentName
   }
 
   if (Mapper[componentName]) {
@@ -544,51 +549,6 @@ const injectPlaceHolder = (componentName, children) => {
   return children
 }
 
-const renderGroup = (children, scope, context) => {
-  return children
-    .map?.((schema) => {
-      const { componentName, children, loop, loopArgs, condition, id } = schema
-
-      if (!componentName) {
-        return null
-      }
-
-      const component = getComponent(componentName)
-
-      if (!component) {
-        return null
-      }
-
-      const loopList = parseData(loop, scope, context)
-
-      const renderElement = (item, index) => {
-        const mergeScope = getLoopScope({
-          scope,
-          index,
-          item,
-          loopArgs
-        })
-
-        if (!parseCondition(condition, mergeScope, context)) {
-          return null
-        }
-
-        const renderChildren = injectPlaceHolder(componentName, children)
-
-        return h(
-          component,
-          getBindProps(schema, mergeScope, context),
-          Array.isArray(renderChildren)
-            ? renderSlot(renderChildren, mergeScope, schema)
-            : parseData(renderChildren, mergeScope, context)
-        )
-      }
-
-      return loopList?.length ? loopList.map(renderElement) : renderElement()
-    })
-    .filter(Boolean)
-}
-
 const getChildren = (schema, mergeScope, context) => {
   const { componentName, children } = schema
   const renderChildren = injectPlaceHolder(componentName, children)
@@ -610,7 +570,7 @@ const getChildren = (schema, mergeScope, context) => {
   // 这里 children 需要返回一个默认插槽的函数，避免 vue 告警：
   // Non-function value encountered for default slot. Prefer function slots for better performance.
   return {
-    default: () => renderGroup(renderChildren, mergeScope, context).filter(Boolean)
+    default: () => children.map?.((child) => renderComponent(child, mergeScope, context)).filter(Boolean)
   }
 }
 
