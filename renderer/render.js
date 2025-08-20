@@ -132,11 +132,23 @@ export const newFn = (...argv) => {
 
 const parseExpression = (data, scope, ctx, isJsx = false) => {
   try {
-    const expression = isJsx ? transformJSX(data.value) : data.value
-    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(ctx, {
+    const mergeScope = {
       ...ctx,
       ...scope,
       slotScope: scope
+    }
+    let expression = isJsx ? transformJSX(data.value) : data.value
+    let params = {}
+    if (data.params) {
+      params = data.params.reduce((acc, paramName) => {
+        acc[paramName] = mergeScope[paramName]
+        return acc
+      }, {})
+      expression = `(e) => {(${expression}).call(this, e, ${data.params.join(',')})}`
+    }
+    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(ctx, {
+      ...mergeScope,
+      ...params
     })
   } catch (err) {
     // 解析抛出异常，则再尝试解析 JSX 语法。如果解析 JSX 语法仍然出现错误，isJsx 变量会确保不会再次递归执行解析
