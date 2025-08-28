@@ -32,6 +32,12 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
+import TinyChartPie from '@opentiny/vue-chart-pie'
+import TinyChartRadar from '@opentiny/vue-chart-radar'
+import TinyChartBar from '@opentiny/vue-chart-bar'
+import TinyChartHistogram from '@opentiny/vue-chart-histogram'
+import TinyChartLine from '@opentiny/vue-chart-line'
+import TinyChartRing from '@opentiny/vue-chart-ring'
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
@@ -73,7 +79,13 @@ export const Mapper = {
   CanvasSection,
   CanvasPlaceholder,
   CanvasRouterLink,
-  CanvasRouterView
+  CanvasRouterView,
+  TinyChartPie,
+  TinyChartRadar,
+  TinyChartBar,
+  TinyChartHistogram,
+  TinyChartLine,
+  TinyChartRing
 }
 
 export const collectionMethodsMap = {}

@@ -28,6 +28,11 @@ export default {
     const reset = (obj) => {
       Object.keys(obj).forEach((key) => delete obj[key]);
     };
+	
+	const customContext = inject('customContext')
+    if (customContext) {
+      setContext({ customContext })
+    }
 
     provide("pageContext", context);
 
