@@ -430,6 +430,10 @@ const parseObjectData = (data, scope, ctx) => {
     )
   }
 
+  if (!Object.keys(res).length) {
+    return null
+  }
+
   return res
 }
 
