@@ -10,11 +10,11 @@
  *
  */
 
-import { h, provide, nextTick, reactive, shallowReactive, watchEffect } from "vue";
-import _ from "lodash";
-import Loading from "./Loading.vue";
-import renderer, { parseData } from "./render";
-import useContext from "./useContext";
+import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject } from 'vue';
+import _ from 'lodash';
+import Loading from './Loading.vue';
+import renderer, { parseData } from './render';
+import useContext from './useContext';
 
 export default {
   props: {
@@ -28,13 +28,13 @@ export default {
     const reset = (obj) => {
       Object.keys(obj).forEach((key) => delete obj[key]);
     };
-	
-	const customContext = inject('customContext')
+
+    const customContext = inject('customContext');
     if (customContext) {
-      setContext({ customContext })
+      setContext({ customContext });
     }
 
-    provide("pageContext", context);
+    provide('pageContext', context);
 
     const pageSchema = reactive({});
     const methods = {};
@@ -48,8 +48,8 @@ export default {
         Object.fromEntries(
           Object.keys(data).map((key) => {
             return [key, parseData(data[key], {}, getContext())];
-          })
-        )
+          }),
+        ),
       );
       setContext(methods);
     };
@@ -63,17 +63,17 @@ export default {
       Object.assign(state, parseData(data, {}, getContext()) || {});
     };
 
-    const setPageCss = (css = "") => {
-      const id = "page-css";
+    const setPageCss = (css = '') => {
+      const id = 'page-css';
       let element = document.getElementById(id);
-      const head = document.querySelector("head");
+      const head = document.querySelector('head');
 
-      document.body.setAttribute("style", "");
+      document.body.setAttribute('style', '');
 
       if (!element) {
-        element = document.createElement("style");
-        element.setAttribute("type", "text/css");
-        element.setAttribute("id", id);
+        element = document.createElement('style');
+        element.setAttribute('type', 'text/css');
+        element.setAttribute('id', id);
 
         element.innerHTML = css;
         head.appendChild(element);
@@ -106,14 +106,13 @@ export default {
     };
 
     watchEffect(() => {
-
       // 最后一个判断与上一次的schema做比较，以解决组件循环刷新问题
-      if (!props.schema || !Object.keys(props.schema) || _.isEqual(props.schema, oldSchema.value) ) {
+      if (!props.schema || !Object.keys(props.schema) || _.isEqual(props.schema, oldSchema.value)) {
         return;
       }
 
       // 缓存schema
-      oldSchema.value = _.cloneDeep(props.schema)
+      oldSchema.value = _.cloneDeep(props.schema);
 
       setSchema(props.schema);
     });
@@ -127,7 +126,7 @@ export default {
   render() {
     // 渲染画布增加根节点，与出码和预览保持一致
     const rootChildrenSchema = {
-      componentName: "div",
+      componentName: 'div',
       // 手动添加一个唯一的属性，后续在画布选中此节点时方便处理额外的逻辑。由于没有修改schema，不会影响出码
       props: {},
       children: this.pageSchema.children,
