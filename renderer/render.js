@@ -430,10 +430,6 @@ const parseObjectData = (data, scope, ctx) => {
     )
   }
 
-  if (!Object.keys(res).length) {
-    return null
-  }
-
   return res
 }
 
@@ -523,8 +519,6 @@ const renderSlot = (children, scope, schema, isCustomElm) => {
 
   return { default: () => renderDefault(children, scope, schema) }
 }
-
-const checkGroup = (componentName) => configure[componentName]?.nestingRule?.childWhitelist?.length
 
 const directChildrenHasTemplate = (children) => children.some((child) => child.componentName === 'Template')
 
