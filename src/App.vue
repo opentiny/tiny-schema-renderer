@@ -1,8 +1,15 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
-import SchemaRenderer from "../index.js";
+import TinyVue from "@opentiny/vue";
+import { createSchemaRenderer } from ".";
+import type { Schema } from "./renderer/types/index";
 
-const schema = ref({});
+const SchemaRenderer = createSchemaRenderer({
+  builtInExcludes: [],
+  components: TinyVue
+})
+
+const schema = ref<Schema>({});
 
 onMounted(async () => {
   schema.value = await import("./mock/schema.json");
@@ -10,5 +17,5 @@ onMounted(async () => {
 </script>
 
 <template>
-  <SchemaRenderer :schema="schema"></SchemaRenderer>
+  <component :is="SchemaRenderer" :schema="schema"></component>
 </template>

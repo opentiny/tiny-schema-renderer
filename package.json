@@ -9,16 +9,23 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "pub": "pnpm publish --no-git-checks --access=public"
+    "pub": "pnpm publish --no-git-checks --access=public",
+    "build:types": "tsc --emitDeclarationOnly",
+    "type-check": "tsc --noEmit"
   },
   "main": "dist/index.js",
   "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "types": "./dist/index.d.ts"
     }
   },
   "repository": {
@@ -41,11 +48,15 @@
     "lodash": "4.17.21"
   },
   "devDependencies": {
+    "@opentiny/vue": "^3.21.0",
+    "@opentiny/vue-icon": "^3.21.0",
+    "@types/babel__core": "^7.20.5",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^20.19.11",
     "@vitejs/plugin-vue": "^5.1.2",
     "@vitejs/plugin-vue-jsx": "^4.0.1",
+    "typescript": "^5.9.2",
     "vite": "^5.4.2",
-    "vue": "^3.5.0",
-    "@opentiny/vue": "^3.21.0",
-    "@opentiny/vue-icon": "^3.21.0"
+    "vue": "^3.5.0"
   }
 }
