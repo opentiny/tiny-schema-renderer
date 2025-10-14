@@ -350,6 +350,9 @@ const parseJSXFunction = (data, ctx) => {
 
 const parseJSFunction = (data, scope, ctx) => {
   try {
+    if (!data.value?.includes('function')) {
+      return
+    }
     const innerFn = newFn(`return ${data.value}`).bind(ctx)()
     return generateFn(innerFn, ctx)
   } catch (error) {
