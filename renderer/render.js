@@ -100,6 +100,19 @@ export const setConfigure = (configureData) => {
   Object.assign(configure, configureData)
 }
 
+const isFunctionString = (str) => {
+  if (typeof str !== 'string') {
+    return false
+  }
+  const trimmed = str.trim()
+
+  const regFunction = /^function\s*\w*\s*\([^)]*\)\s*\{[\s\S]*\}$/
+
+  const regArrow = /^(\(?\s*[^)=]*\s*\)?\s*=>\s*\{?[\s\S]*\}?)$/
+
+  return regFunction.test(trimmed) || regArrow.test(trimmed)
+}
+
 const isJSSlot = (data) => {
   return data && data.type === 'JSSlot'
 }
@@ -350,7 +363,7 @@ const parseJSXFunction = (data, ctx) => {
 
 const parseJSFunction = (data, scope, ctx) => {
   try {
-    if (!data.value?.includes('function')) {
+    if (!isFunctionString(data.value)) {
       return
     }
     const innerFn = newFn(`return ${data.value}`).bind(ctx)()
