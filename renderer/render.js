@@ -106,9 +106,9 @@ const isFunctionString = (str) => {
   }
   const trimmed = str.trim()
 
-  const regFunction = /^function\s*\w*\s*\([^)]*\)\s*\{[\s\S]*\}$/
+  const regFunction = /^function[\s\S]*}$/
 
-  const regArrow = /^(\(?\s*[^)=]*\s*\)?\s*=>\s*\{?[\s\S]*\}?)$/
+  const regArrow = /=>/
 
   return regFunction.test(trimmed) || regArrow.test(trimmed)
 }
