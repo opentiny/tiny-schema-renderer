@@ -540,10 +540,12 @@ const getBindProps = (schema, scope, context) => {
     return {}
   }
 
+  const { cssScopeId } = context
   const bindProps = {
     ...parseData(schema.props, scope, context),
     'data-id': schema.id,
-    'data-tag': componentName
+    'data-tag': componentName,
+    [cssScopeId]: ''
   }
 
   if (Mapper[componentName]) {
