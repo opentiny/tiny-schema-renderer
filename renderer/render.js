@@ -104,13 +104,8 @@ const isFunctionString = (str) => {
   if (typeof str !== 'string') {
     return false
   }
-  const trimmed = str.trim()
 
-  const regFunction = /^function[\s\S]*}$/
-
-  const regArrow = /=>/
-
-  return regFunction.test(trimmed) || regArrow.test(trimmed)
+  return str.includes('function') || str.includes('=>')
 }
 
 const isJSSlot = (data) => {
