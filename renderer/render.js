@@ -38,11 +38,37 @@ import TinyChartBar from '@opentiny/vue-chart-bar'
 import TinyChartHistogram from '@opentiny/vue-chart-histogram'
 import TinyChartLine from '@opentiny/vue-chart-line'
 import TinyChartRing from '@opentiny/vue-chart-ring'
+import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
 const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction']
 const isOn = (key) => /^on[A-Z]\w*/.test(key)
+const customSettings = {}
+
+const isClass = (fn) => {
+  if (typeof fn !== 'function') return false
+  const str = fn.toString().trim()
+  return (
+    /^class\s/.test(str) ||
+    (typeof Reflect === 'object' &&
+      typeof Reflect.construct === 'function' &&
+      fn.prototype &&
+      fn.prototype.constructor === fn &&
+      Object.getOwnPropertyNames(fn.prototype).length > 1)
+  )
+}
+
+// 规避创建function eslint报错
+export const newFn = (...argv) => {
+  let Fn = Function
+
+  if (customSettings.Function && isClass(customSettings.Function)) {
+    Fn = customSettings.Function
+  }
+
+  return new Fn(...argv)
+}
 
 const transformJSX = (code) => {
   const res = transformSync(code, {
@@ -143,12 +169,6 @@ const isObject = (data) => {
 // 判断是否是状态访问器
 export const isStateAccessor = (stateData) =>
   stateData?.accessor?.getter?.type === 'JSFunction' || stateData?.accessor?.setter?.type === 'JSFunction'
-
-// 规避创建function eslint报错
-export const newFn = (...argv) => {
-  const Fn = Function
-  return new Fn(...argv)
-}
 
 const parseExpression = (data, scope, ctx, isJsx = false) => {
   try {
@@ -618,6 +638,8 @@ export const renderer = {
   },
   setup(props) {
     provide('schema', props.schema)
+    const rendererSettings = inject(RENDERER_SETTINGS_KEY)
+    customSettings.Function = rendererSettings?.Function
   },
   render() {
     const context = inject('pageContext')

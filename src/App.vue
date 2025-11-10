@@ -1,12 +1,15 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import SchemaRenderer from "../index.js";
+import { ref, onMounted, provide } from 'vue'
+import SchemaRenderer, { RENDERER_SETTINGS_KEY } from '../index.js'
+import { CustomFunction } from './CustomFunction.js'
 
-const schema = ref({});
+const schema = ref({})
+
+provide(RENDERER_SETTINGS_KEY, { Function: CustomFunction })
 
 onMounted(async () => {
-  schema.value = await import("./mock/schema.json");
-});
+  schema.value = await import('./mock/schema.json')
+})
 </script>
 
 <template>
