@@ -13,7 +13,7 @@
 import { h, provide, inject } from 'vue'
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import babelPluginJSX from '@vue/babel-plugin-jsx'
-import { transformSync } from '@babel/core'
+import { transform } from '@babel/standalone'
 import TinyVue, { Notify } from '@opentiny/vue'
 import {
   CanvasRow,
@@ -38,6 +38,8 @@ import TinyChartBar from '@opentiny/vue-chart-bar'
 import TinyChartHistogram from '@opentiny/vue-chart-histogram'
 import TinyChartLine from '@opentiny/vue-chart-line'
 import TinyChartRing from '@opentiny/vue-chart-ring'
+import { Interpreter, Function } from 'eval5'
+Interpreter.global = window
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
@@ -45,7 +47,7 @@ const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction']
 const isOn = (key) => /^on[A-Z]\w*/.test(key)
 
 const transformJSX = (code) => {
-  const res = transformSync(code, {
+  const res = transform(code, {
     plugins: [
       [
         babelPluginJSX,
@@ -146,6 +148,21 @@ export const isStateAccessor = (stateData) =>
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
+  if (argv.length > 0) {
+    const lastArg = argv[argv.length - 1]
+    // 将代码包装在函数中以避免顶层 return 语句报错
+    const wrappedCode = `(function() { ${lastArg} })()`
+    const res = transform(wrappedCode, {
+      presets: [['env', { modules: false }]],
+      sourceType: 'script' // 使用 script 模式，避免严格模式导致 with 语句报错
+    })
+    // 提取转换后的代码，移除包装函数
+    const transformedCode = res.code
+      .replace(/^\(function\s*\(\)\s*\{/, '') // 移除开头的包装
+      .replace(/\}\)\(\);?$/, '') // 移除结尾的包装
+      .trim()
+    argv[argv.length - 1] = transformedCode
+  }
   const Fn = Function
   return new Fn(...argv)
 }
