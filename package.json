@@ -43,16 +43,19 @@
     "postcss-selector-parser": "^7.1.0"
   },
   "devDependencies": {
-    "@opentiny/vue": "^3.25.0",
+    "@babel/standalone": "^7.23.0",
+    "@opentiny/vue": "3.25.0",
+    "@opentiny/vue-theme": "3.25.0",
     "@opentiny/vue-chart-bar": "~3.14.0",
     "@opentiny/vue-chart-histogram": "~3.14.0",
     "@opentiny/vue-chart-line": "~3.14.0",
     "@opentiny/vue-chart-pie": "~3.14.0",
     "@opentiny/vue-chart-radar": "~3.14.0",
     "@opentiny/vue-chart-ring": "3.14.0",
-    "@opentiny/vue-icon": "^3.21.0",
+    "@opentiny/vue-icon": "3.25.0",
     "@vitejs/plugin-vue": "^5.1.2",
     "@vitejs/plugin-vue-jsx": "^4.0.1",
+    "eval5": "^1.4.8",
     "vite": "^5.4.2",
     "vue": "^3.5.0"
   }
