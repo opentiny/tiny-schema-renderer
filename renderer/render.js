@@ -46,24 +46,43 @@ const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction']
 const isOn = (key) => /^on[A-Z]\w*/.test(key)
 const customSettings = {}
 
-const isClass = (fn) => {
+/**
+ * 判断是否是构造函数
+ * @param {*} fn
+ * @returns {boolean}
+ */
+const isFunctionConstructor = (fn) => {
   if (typeof fn !== 'function') return false
-  const str = fn.toString().trim()
-  return (
-    /^class\s/.test(str) ||
-    (typeof Reflect === 'object' &&
-      typeof Reflect.construct === 'function' &&
-      fn.prototype &&
-      fn.prototype.constructor === fn &&
-      Object.getOwnPropertyNames(fn.prototype).length > 1)
-  )
+
+  if (!fn.prototype) return false
+
+  if (Symbol.hasInstance && typeof fn[Symbol.hasInstance] === 'function') {
+    return true
+  }
+
+  if (fn.prototype.constructor !== fn) {
+    try {
+      const TestClass = new Proxy(fn, {
+        construct(target, args) {
+          return Object.create(target.prototype)
+        }
+      })
+      const instance = new TestClass()
+
+      return instance instanceof fn
+    } catch {
+      return false
+    }
+  }
+
+  return true
 }
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
   let Fn = Function
 
-  if (customSettings.Function && isClass(customSettings.Function)) {
+  if (customSettings.Function && isFunctionConstructor(customSettings.Function)) {
     Fn = customSettings.Function
   }
 
