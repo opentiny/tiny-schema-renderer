@@ -657,7 +657,7 @@ export const renderer = {
   },
   setup(props) {
     provide('schema', props.schema)
-    const rendererSettings = inject(RENDERER_SETTINGS_KEY)
+    const rendererSettings = inject(RENDERER_SETTINGS_KEY, null)
     customSettings.Function = rendererSettings?.Function
   },
   render() {
