@@ -24,6 +24,7 @@ export default {
       default: () => ({})
     }
   },
+  expose: ['setContext', 'getContext'],
   setup(props) {
     const { context, oldSchema, setContext, getContext } = useContext()
     const cssScopeId = `data-schema-${Math.random().toString(36).slice(2, 8)}`
@@ -101,6 +102,8 @@ export default {
     })
 
     return {
+      setContext,
+      getContext,
       pageSchema,
       methods,
       state
