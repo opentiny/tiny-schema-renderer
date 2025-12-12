@@ -47,6 +47,17 @@ const isOn = (key) => /^on[A-Z]\w*/.test(key)
 const customSettings = {}
 
 /**
+ * 设置 customSettings
+ * 在 RenderMain 的 setup 中调用，将 rendererSettings 的所有属性设置到 customSettings 中
+ * 确保在 newFn 等函数被调用之前就能获取到自定义设置
+ */
+export const setCustomSettings = (rendererSettings) => {
+  if (rendererSettings && typeof rendererSettings === 'object') {
+    Object.assign(customSettings, rendererSettings)
+  }
+}
+
+/**
  * 判断是否是构造函数
  * @param {*} fn
  * @returns {boolean}
@@ -657,8 +668,6 @@ export const renderer = {
   },
   setup(props) {
     provide('schema', props.schema)
-    const rendererSettings = inject(RENDERER_SETTINGS_KEY, null)
-    customSettings.Function = rendererSettings?.Function
   },
   render() {
     const context = inject('pageContext')
