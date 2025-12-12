@@ -13,10 +13,11 @@
 import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject } from 'vue'
 import _ from 'lodash'
 import Loading from './Loading.vue'
-import renderer, { parseData, setCustomSettings } from './render'
+import renderer, { parseData } from './render'
 import useContext from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
+import useCustomSetting from './useCustomSetting'
 
 export default {
   props: {
@@ -33,9 +34,9 @@ export default {
       Object.keys(obj).forEach((key) => delete obj[key])
     }
 
-    // 在 setup 早期设置 customSettings，确保在 parseData 调用 newFn 之前就能获取到
-    const rendererSettings = inject(RENDERER_SETTINGS_KEY, null)
-    setCustomSettings(rendererSettings)
+    // 设置 customSettings，如 Function
+    const { setCustomSettings } = useCustomSetting()
+    setCustomSettings(inject(RENDERER_SETTINGS_KEY, null))
 
     const customContext = inject('customContext')
     if (customContext) {

@@ -39,12 +39,14 @@ import TinyChartHistogram from '@opentiny/vue-chart-histogram'
 import TinyChartLine from '@opentiny/vue-chart-line'
 import TinyChartRing from '@opentiny/vue-chart-ring'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
+import useCustomSetting from './useCustomSetting'
+
+const { getCustomSettings } = useCustomSetting()
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
 const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction']
 const isOn = (key) => /^on[A-Z]\w*/.test(key)
-const customSettings = {}
 
 /**
  * 设置 customSettings
@@ -92,6 +94,7 @@ const isFunctionConstructor = (fn) => {
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
   let Fn = Function
+  const customSettings = getCustomSettings()
 
   if (customSettings.Function && isFunctionConstructor(customSettings.Function)) {
     Fn = customSettings.Function
