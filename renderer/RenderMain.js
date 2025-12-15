@@ -36,7 +36,11 @@ export default {
 
     // 设置 customSettings，如 Function
     const { setCustomSettings } = useCustomSetting()
-    setCustomSettings(inject(RENDERER_SETTINGS_KEY, null))
+
+    const customSettings = inject(RENDERER_SETTINGS_KEY, null)
+    if (customSettings) {
+      setCustomSettings(customSettings)
+    }
 
     const customContext = inject('customContext')
     if (customContext) {
