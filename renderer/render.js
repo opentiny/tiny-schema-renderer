@@ -258,14 +258,14 @@ function renderComponent(schema, scope, context) {
   return loopList?.length ? loopList.map(renderElement) : renderElement()
 }
 
-const renderDefault = (children, scope, parent) => {
-  const childrenComponents = children.map?.((child) => renderComponent(child, scope, parent))
+const renderDefault = (children, scope, ctx) => {
+  const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx))
 
   return childrenComponents.filter(Boolean)
 }
 
-const parseJSSlot = (data, scope) => {
-  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, data)
+const parseJSSlot = (data, scope, ctx) => {
+  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, ctx)
 }
 
 export const generateFn = (innerFn, context) => {
