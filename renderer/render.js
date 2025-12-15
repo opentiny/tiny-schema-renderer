@@ -400,9 +400,24 @@ const parseJSFunction = (data, scope, ctx) => {
     if (!isFunctionString(data.value)) {
       return
     }
+    if (typeof scope === 'object' && Object.keys(scope).length > 0) {
+      // 扩充协议，支持在节点上声明函数
+      return generateFn( // generateFn可以包裹执行错误
+        parseExpression(
+          {
+            type: JS_EXPRESSION,
+            value: data.value
+          },
+          scope,
+          ctx
+        ).bind(ctx),
+        ctx
+      )
+    }
     const innerFn = newFn(`return ${data.value}`).bind(ctx)()
     return generateFn(innerFn, ctx)
   } catch (error) {
+    console.error(error)
     return parseJSXFunction(data, ctx)
   }
 }
