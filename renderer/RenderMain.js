@@ -16,6 +16,8 @@ import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
 import useContext from './useContext'
 import { setPageCss } from './pageCss'
+import { RENDERER_SETTINGS_KEY } from './renderer-settings'
+import useCustomSetting from './useCustomSetting'
 
 export default {
   props: {
@@ -30,6 +32,14 @@ export default {
     const cssScopeId = `data-schema-${Math.random().toString(36).slice(2, 8)}`
     const reset = (obj) => {
       Object.keys(obj).forEach((key) => delete obj[key])
+    }
+
+    // 设置 customSettings，如 Function
+    const { setCustomSettings } = useCustomSetting()
+
+    const customSettings = inject(RENDERER_SETTINGS_KEY, null)
+    if (customSettings) {
+      setCustomSettings(customSettings)
     }
 
     const customContext = inject('customContext')
