@@ -7,3 +7,8 @@ declare module '@opentiny/tiny-engine-builtin-component' {
   export const CanvasFlexBox: Component
   export const CanvasSection: Component
 }
+
+declare module 'lodash' {
+  import * as _ from 'lodash'
+  export = _
+}

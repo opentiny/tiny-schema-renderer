@@ -4,9 +4,13 @@ import TinyVue from '@opentiny/vue'
 import { createSchemaRenderer } from '.'
 import type { Schema, SchemaRendererOptions } from './renderer/types/index'
 
+const componentResolver = (name: string) => {
+  return TinyVue[name]
+}
+
 const options: SchemaRendererOptions = {
   builtInExcludes: [],
-  components: TinyVue
+  componentResolver
 }
 const SchemaRenderer = createSchemaRenderer(options)
 

@@ -1,9 +1,9 @@
 import { h, provide, inject, defineComponent, type VNode } from 'vue'
 import {
   getComponent,
-  registerCustomComponent,
   excludeBuiltinComponents,
-  builtinComponents
+  builtinComponents,
+  setComponentResolver
 } from './materials-functions'
 import { parseData } from './data-parser'
 import type { Schema, SchemaChild, PageContext, SchemaRendererOptions } from '../types/index'
@@ -24,7 +24,7 @@ interface ConfigureData {
   [key: string]: any
 }
 
-const getBindProps = (schema: SchemaChild, scope: Record<string, any>, context: PageContext) => {
+const getBindProps = (schema: SchemaChild, scope: Record<string, any>, context: PageContext): Record<string, any> => {
   const { componentName } = schema
 
   if (componentName === 'CanvasPlaceholder') {
@@ -45,7 +45,7 @@ const getBindProps = (schema: SchemaChild, scope: Record<string, any>, context: 
   bindProps.class = bindProps.className
   delete bindProps.className
 
-  return
+  return bindProps
 }
 
 function renderComponent(schema: SchemaChild, scope: Record<string, any> = {}, context: PageContext): VNode | null {
@@ -66,11 +66,11 @@ function renderComponent(schema: SchemaChild, scope: Record<string, any> = {}, c
   const renderElement = (item: any, index: number): VNode | null => {
     let mergeScope = item
       ? getLoopScope({
-          item,
-          index,
-          loopArgs,
-          scope
-        })
+        item,
+        index,
+        loopArgs,
+        scope
+      })
       : scope
 
     if (!parseCondition(condition, mergeScope, context)) {
@@ -127,7 +127,7 @@ const getLoopScope = ({ scope, index, item, loopArgs }: LoopScopeParams): Record
   }
 }
 
-const injectPlaceHolder = (componentName: string, children: SchemaChild[] | undefined): SchemaChild[] => {
+const injectPlaceholder = (componentName: string, children: SchemaChild[] | undefined): SchemaChild[] => {
   const isEmptyArr = Array.isArray(children) && !children.length
 
   if (configure[componentName]?.isContainer && (!children || isEmptyArr)) {
@@ -141,7 +141,7 @@ const injectPlaceHolder = (componentName: string, children: SchemaChild[] | unde
   return children || []
 }
 
-const directChildrenHasTemplate = (children: SchemaChild[]): boolean => {
+const hasDirectTemplateChildren = (children: SchemaChild[]): boolean => {
   return children.some((child) => child.componentName === 'Template')
 }
 
@@ -152,7 +152,7 @@ const renderSlot = (children: SchemaChild[], mergeScope: Record<string, any>, _s
 
 const getChildren = (schema: SchemaChild, mergeScope: Record<string, any>, context: PageContext): any => {
   const { componentName, children } = schema
-  const renderChildren = injectPlaceHolder(componentName, children)
+  const renderChildren = injectPlaceholder(componentName, children)
 
   if (!Array.isArray(renderChildren)) {
     return parseData(renderChildren, mergeScope, context)
@@ -162,7 +162,7 @@ const getChildren = (schema: SchemaChild, mergeScope: Record<string, any>, conte
     return null
   }
 
-  if (directChildrenHasTemplate(renderChildren)) {
+  if (hasDirectTemplateChildren(renderChildren)) {
     return renderSlot(renderChildren, mergeScope, schema)
   }
 
@@ -209,15 +209,13 @@ export const renderer = defineComponent({
 })
 
 export const createRenderer = (options: SchemaRendererOptions = {}) => {
-  const { builtInExcludes = [], components = {}, hooks = {} } = options
+  const { builtInExcludes = [], componentResolver } = options
 
   excludeBuiltinComponents(builtInExcludes)
 
-  Object.entries(components).forEach(([name, component]) => {
-    if (component && (typeof component === 'object' || typeof component === 'function')) {
-      registerCustomComponent(name, component)
-    }
-  })
+  if (componentResolver) {
+    setComponentResolver(componentResolver)
+  }
 
   return renderer
 }

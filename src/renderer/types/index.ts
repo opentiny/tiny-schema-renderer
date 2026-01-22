@@ -34,10 +34,9 @@ export interface Schema {
 // 渲染器选项类型
 export interface SchemaRendererOptions {
   builtInExcludes?: BuiltinComponentsName[]
-  components?: Record<string, Component | Record<string, any>>
   loading?: boolean
   loadingComponent?: Component
-  [key: string]: any
+  componentResolver?: (name: string) => Component | null
 }
 
 // 上下文类型

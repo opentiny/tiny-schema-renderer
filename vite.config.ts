@@ -32,8 +32,5 @@ export default defineConfig({
   },
   resolve: {
     extensions: ['.ts', '.js', '.vue', '.jsx', '.tsx']
-  },
-  optimizeDeps: {
-    exclude: ['@babel/core', '@babel/types']
   }
 })

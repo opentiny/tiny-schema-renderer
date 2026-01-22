@@ -57,6 +57,18 @@ export const registerCustomComponent = (name: string, component: Component): voi
 
 export const getCustomComponent = (name: string): Component | undefined => customComponents[name]
 
+let customComponentResolver: ((name: string) => Component | null) | null = null
+
+export const setComponentResolver = (resolver: ((name: string) => Component | null) | null): void => {
+  customComponentResolver = resolver
+}
+
 export const getComponent = (name: string): Component | string | null => {
-  return getBuiltinComponent(name) || getCustomComponent(name) || (isHTMLTag(name) ? name : null)
+  // 优先级：内置组件 > 自定义组件 > 组件解析器 > HTML标签
+  return (
+    getBuiltinComponent(name) ||
+    getCustomComponent(name) ||
+    (customComponentResolver ? customComponentResolver(name) : null) ||
+    (isHTMLTag(name) ? name : null)
+  )
 }
