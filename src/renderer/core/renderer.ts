@@ -1,30 +1,16 @@
-/**
- * Copyright (c) 2023 - present TinyEngine Authors.
- * Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
- *
- * Use of this source code is governed by an MIT-style license.
- *
- * THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
- * BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
- * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
- *
- */
-
 import { h, provide, inject, defineComponent, type VNode } from 'vue'
-import { getComponent, registerCustomComponent, excludeBuiltinComponents } from './materials-functions'
+import {
+  getComponent,
+  registerCustomComponent,
+  excludeBuiltinComponents,
+  builtinComponents
+} from './materials-functions'
 import { parseData } from './data-parser'
 import type { Schema, SchemaChild, PageContext, SchemaRendererOptions } from '../types/index'
 
 interface LoopArgs {
   item?: string
   index?: string
-}
-
-interface SchemaWithLoop extends SchemaChild {
-  loop?: any
-  loopArgs?: LoopArgs
-  condition?: any
-  children?: SchemaChild[]
 }
 
 interface LoopScopeParams {
@@ -38,11 +24,32 @@ interface ConfigureData {
   [key: string]: any
 }
 
-function renderComponent(schema: SchemaWithLoop, scope: Record<string, any> = {}, context: PageContext): VNode | null {
-  const { componentName, loop, loopArgs, condition } = schema
+const getBindProps = (schema: SchemaChild, scope: Record<string, any>, context: PageContext) => {
+  const { componentName } = schema
 
-  // 处理数据源和表格fetchData的映射关系
-  generateCollection(schema)
+  if (componentName === 'CanvasPlaceholder') {
+    return {}
+  }
+
+  const bindProps = {
+    ...parseData(schema.props, scope, context),
+    'data-id': schema.id,
+    'data-tag': componentName
+  }
+
+  if (componentName in builtinComponents) {
+    bindProps.schema = schema
+  }
+
+  // 绑定组件属性时需要将 className 重命名为 class，防止覆盖组件内置 class
+  bindProps.class = bindProps.className
+  delete bindProps.className
+
+  return
+}
+
+function renderComponent(schema: SchemaChild, scope: Record<string, any> = {}, context: PageContext): VNode | null {
+  const { componentName, loop, loopArgs, condition } = schema
 
   if (!componentName) {
     return null
@@ -70,7 +77,8 @@ function renderComponent(schema: SchemaWithLoop, scope: Record<string, any> = {}
       return null
     }
 
-    const props = parseData(schema.props, mergeScope, context) || {}
+    // const props = parseData(schema.props, mergeScope, context) || {}
+    const props = getBindProps(schema, mergeScope, context)
     const children = getChildren(schema, mergeScope, context)
 
     return h(component, props, children)
@@ -83,10 +91,6 @@ function renderComponent(schema: SchemaWithLoop, scope: Record<string, any> = {}
   return renderElement(null, 0)
 }
 
-const generateCollection = (_schema: SchemaWithLoop): void => {
-  // 实现生成集合的逻辑
-}
-
 const parseCondition = (condition: any, scope: Record<string, any>, context: PageContext): boolean => {
   if (!condition) {
     return true
@@ -94,7 +98,15 @@ const parseCondition = (condition: any, scope: Record<string, any>, context: Pag
   return parseData(condition, scope, context)
 }
 
-const parseLoopArgs = ({ item, index, loopArgs }: { item: any; index: number; loopArgs?: LoopArgs }): Record<string, any> => {
+const parseLoopArgs = ({
+  item,
+  index,
+  loopArgs
+}: {
+  item: any
+  index: number
+  loopArgs?: LoopArgs
+}): Record<string, any> => {
   if (!loopArgs) {
     return { item, index }
   }
@@ -130,15 +142,15 @@ const injectPlaceHolder = (componentName: string, children: SchemaChild[] | unde
 }
 
 const directChildrenHasTemplate = (children: SchemaChild[]): boolean => {
-  return children.some(child => child.componentName === 'Template')
+  return children.some((child) => child.componentName === 'Template')
 }
 
-const renderSlot = (children: SchemaChild[], mergeScope: Record<string, any>, _schema: SchemaWithLoop): any => {
+const renderSlot = (children: SchemaChild[], mergeScope: Record<string, any>, _schema: SchemaChild): any => {
   // 实现渲染插槽的逻辑
-  return children.map(child => renderComponent(child, mergeScope, {} as PageContext)).filter(Boolean)
+  return children.map((child) => renderComponent(child, mergeScope, {} as PageContext)).filter(Boolean)
 }
 
-const getChildren = (schema: SchemaWithLoop, mergeScope: Record<string, any>, context: PageContext): any => {
+const getChildren = (schema: SchemaChild, mergeScope: Record<string, any>, context: PageContext): any => {
   const { componentName, children } = schema
   const renderChildren = injectPlaceHolder(componentName, children)
 
@@ -149,7 +161,6 @@ const getChildren = (schema: SchemaWithLoop, mergeScope: Record<string, any>, co
   if (!renderChildren.length) {
     return null
   }
-
 
   if (directChildrenHasTemplate(renderChildren)) {
     return renderSlot(renderChildren, mergeScope, schema)
@@ -198,7 +209,7 @@ export const renderer = defineComponent({
 })
 
 export const createRenderer = (options: SchemaRendererOptions = {}) => {
-  const { builtInExcludes = [], components = {} } = options
+  const { builtInExcludes = [], components = {}, hooks = {} } = options
 
   excludeBuiltinComponents(builtInExcludes)
 
@@ -208,32 +219,7 @@ export const createRenderer = (options: SchemaRendererOptions = {}) => {
     }
   })
 
-  return defineComponent({
-    name: 'renderer',
-    props: {
-      schema: {
-        type: Object as () => SchemaChild,
-        required: true
-      },
-      scope: {
-        type: Object as () => Record<string, any>,
-        default: () => ({})
-      },
-      parent: {
-        type: Object as () => Schema,
-        default: () => ({})
-      }
-    },
-    setup(props) {
-      provide('schema', props.schema)
-    },
-    render() {
-      const context = inject('pageContext') as PageContext
-      const { scope, schema } = this
-
-      return renderComponent(schema, scope, context)
-    }
-  })
+  return renderer
 }
 
 export default renderer

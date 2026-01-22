@@ -1,14 +1,22 @@
 import { Component, ComponentPublicInstance } from 'vue'
-import type { BuiltinComponentsNames } from '../core/materials-functions'
+import type { BuiltinComponentsName } from '../core/materials-functions'
 
 // Schema 相关类型定义
 export interface SchemaProps {
   [key: string]: any
 }
 
+export interface LoopArgs {
+  item?: string
+  index?: string
+}
+
 export interface SchemaChild {
   componentName: string
   props?: SchemaProps
+  loop?: any
+  loopArgs?: LoopArgs
+  condition?: any
   children?: SchemaChild[]
   [key: string]: any
 }
@@ -25,8 +33,8 @@ export interface Schema {
 
 // 渲染器选项类型
 export interface SchemaRendererOptions {
-  builtInExcludes?: string[]
-  components?: Record<BuiltinComponentsNames, Component>
+  builtInExcludes?: BuiltinComponentsName[]
+  components?: Record<string, Component | Record<string, any>>
   loading?: boolean
   loadingComponent?: Component
   [key: string]: any

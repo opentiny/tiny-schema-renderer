@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import TinyVue from "@opentiny/vue";
-import { createSchemaRenderer } from ".";
-import type { Schema } from "./renderer/types/index";
+import { ref, onMounted } from 'vue'
+import TinyVue from '@opentiny/vue'
+import { createSchemaRenderer } from '.'
+import type { Schema, SchemaRendererOptions } from './renderer/types/index'
 
-const SchemaRenderer = createSchemaRenderer({
+const options: SchemaRendererOptions = {
   builtInExcludes: [],
   components: TinyVue
-})
+}
+const SchemaRenderer = createSchemaRenderer(options)
 
 const schema = ref<Schema>({});
 
 onMounted(async () => {
-  schema.value = await import('./mock/schema.json')
+  const mod = await import('./mock/schema.json')
+  schema.value = mod as Schema
 })
 </script>
 

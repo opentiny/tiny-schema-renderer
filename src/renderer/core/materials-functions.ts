@@ -39,15 +39,15 @@ export const builtinComponents = {
 
 export const excludeBuiltinComponents = (names: string[]) => {
   names.forEach((name) => {
-    delete builtinComponents[name as BuiltinComponentsNames]
+    delete builtinComponents[name as BuiltinComponentsName]
   })
 }
 
 export const getBuiltinComponent = (name: string): Component | undefined => {
-  return builtinComponents[name as BuiltinComponentsNames]
+  return builtinComponents[name as BuiltinComponentsName]
 }
 
-export type BuiltinComponentsNames = keyof typeof builtinComponents
+export type BuiltinComponentsName = keyof typeof builtinComponents
 
 export const customComponents: CustomComponents = {}
 
