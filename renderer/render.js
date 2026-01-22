@@ -32,11 +32,64 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
+import TinyChartPie from '@opentiny/vue-chart-pie'
+import TinyChartRadar from '@opentiny/vue-chart-radar'
+import TinyChartBar from '@opentiny/vue-chart-bar'
+import TinyChartHistogram from '@opentiny/vue-chart-histogram'
+import TinyChartLine from '@opentiny/vue-chart-line'
+import TinyChartRing from '@opentiny/vue-chart-ring'
+import useCustomSetting from './useCustomSetting'
+
+const { getCustomSettings } = useCustomSetting()
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
 const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction']
 const isOn = (key) => /^on[A-Z]\w*/.test(key)
+
+/**
+ * 判断是否是构造函数
+ * @param {*} fn
+ * @returns {boolean}
+ */
+const isFunctionConstructor = (fn) => {
+  if (typeof fn !== 'function') return false
+
+  if (!fn.prototype) return false
+
+  if (Symbol.hasInstance && typeof fn[Symbol.hasInstance] === 'function') {
+    return true
+  }
+
+  if (fn.prototype.constructor !== fn) {
+    try {
+      const TestClass = new Proxy(fn, {
+        construct(target, args) {
+          return Object.create(target.prototype)
+        }
+      })
+      const instance = new TestClass()
+
+      return instance instanceof fn
+    } catch {
+      return false
+    }
+  }
+
+  return true
+}
+
+// 规避创建function eslint报错
+export const newFn = (...argv) => {
+  let Fn = Function
+  const customSettings = getCustomSettings()
+
+  if (customSettings.Function && isFunctionConstructor(customSettings.Function)) {
+    Fn = customSettings.Function
+  }
+
+  return new Fn(...argv)
+}
 
 const transformJSX = (code) => {
   const res = transformSync(code, {
@@ -73,7 +126,13 @@ export const Mapper = {
   CanvasSection,
   CanvasPlaceholder,
   CanvasRouterLink,
-  CanvasRouterView
+  CanvasRouterView,
+  TinyChartPie,
+  TinyChartRadar,
+  TinyChartBar,
+  TinyChartHistogram,
+  TinyChartLine,
+  TinyChartRing
 }
 
 export const collectionMethodsMap = {}
@@ -86,6 +145,14 @@ const configure = {}
 
 export const setConfigure = (configureData) => {
   Object.assign(configure, configureData)
+}
+
+const isFunctionString = (str) => {
+  if (typeof str !== 'string') {
+    return false
+  }
+
+  return str.includes('function') || str.includes('=>')
 }
 
 const isJSSlot = (data) => {
@@ -123,12 +190,6 @@ const isObject = (data) => {
 // 判断是否是状态访问器
 export const isStateAccessor = (stateData) =>
   stateData?.accessor?.getter?.type === 'JSFunction' || stateData?.accessor?.setter?.type === 'JSFunction'
-
-// 规避创建function eslint报错
-export const newFn = (...argv) => {
-  const Fn = Function
-  return new Fn(...argv)
-}
 
 const parseExpression = (data, scope, ctx, isJsx = false) => {
   try {
@@ -199,14 +260,14 @@ function renderComponent(schema, scope, context) {
   return loopList?.length ? loopList.map(renderElement) : renderElement()
 }
 
-const renderDefault = (children, scope, parent) => {
-  const childrenComponents = children.map?.((child) => renderComponent(child, scope, parent))
+const renderDefault = (children, scope, ctx) => {
+  const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx))
 
   return childrenComponents.filter(Boolean)
 }
 
-const parseJSSlot = (data, scope) => {
-  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, data)
+const parseJSSlot = (data, scope, ctx) => {
+  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, ctx)
 }
 
 export const generateFn = (innerFn, context) => {
@@ -338,9 +399,27 @@ const parseJSXFunction = (data, ctx) => {
 
 const parseJSFunction = (data, scope, ctx) => {
   try {
+    if (!isFunctionString(data.value)) {
+      return
+    }
+    if (typeof scope === 'object' && Object.keys(scope).length > 0) {
+      // 扩充协议，支持在节点上声明函数
+      return generateFn( // generateFn可以包裹执行错误
+        parseExpression(
+          {
+            type: JS_EXPRESSION,
+            value: data.value
+          },
+          scope,
+          ctx
+        ).bind(ctx),
+        ctx
+      )
+    }
     const innerFn = newFn(`return ${data.value}`).bind(ctx)()
     return generateFn(innerFn, ctx)
   } catch (error) {
+    console.error(error)
     return parseJSXFunction(data, ctx)
   }
 }
@@ -416,10 +495,6 @@ const parseObjectData = (data, scope, ctx) => {
       scope,
       ctx
     )
-  }
-
-  if (!Object.keys(res).length) {
-    return null
   }
 
   return res
@@ -512,8 +587,6 @@ const renderSlot = (children, scope, schema, isCustomElm) => {
   return { default: () => renderDefault(children, scope, schema) }
 }
 
-const checkGroup = (componentName) => configure[componentName]?.nestingRule?.childWhitelist?.length
-
 const directChildrenHasTemplate = (children) => children.some((child) => child.componentName === 'Template')
 
 const getBindProps = (schema, scope, context) => {
@@ -523,10 +596,12 @@ const getBindProps = (schema, scope, context) => {
     return {}
   }
 
+  const { cssScopeId } = context
   const bindProps = {
     ...parseData(schema.props, scope, context),
     'data-id': schema.id,
-    'data-tag': componentName
+    'data-tag': componentName,
+    [cssScopeId]: ''
   }
 
   if (Mapper[componentName]) {

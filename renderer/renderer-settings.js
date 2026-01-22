@@ -1,0 +1,1 @@
+export const RENDERER_SETTINGS_KEY = Symbol('RENDERER_SETTINGS_KEY')

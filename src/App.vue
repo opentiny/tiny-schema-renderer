@@ -12,8 +12,8 @@ const SchemaRenderer = createSchemaRenderer({
 const schema = ref<Schema>({});
 
 onMounted(async () => {
-  schema.value = await import("./mock/schema.json");
-});
+  schema.value = await import('./mock/schema.json')
+})
 </script>
 
 <template>
