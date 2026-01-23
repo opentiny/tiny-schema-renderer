@@ -2,9 +2,20 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import { resolve } from 'path'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
-  plugins: [vue(), vueJsx()],
+  plugins: [
+    vue(),
+    vueJsx(),
+    visualizer({
+      filename: 'dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+      template: 'treemap' // 可选: 'sunburst' | 'treemap' | 'network'
+    })
+  ],
   define: {
     'process.env': {},
     'process.platform': JSON.stringify('browser'),
@@ -20,6 +31,7 @@ export default defineConfig({
       fileName: 'index',
       formats: ['es']
     },
+    minify: 'esbuild',
     rollupOptions: {
       external: ['vue', '@vue/shared'],
       output: {
@@ -27,6 +39,10 @@ export default defineConfig({
           vue: 'Vue',
           '@vue/shared': 'VueShared'
         }
+      },
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false
       }
     }
   },

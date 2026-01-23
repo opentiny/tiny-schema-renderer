@@ -1,13 +1,13 @@
 import babelPluginJSX from '@vue/babel-plugin-jsx'
 import { transformSync } from '@babel/core'
 import { getComponent } from './materials-functions'
-import type { PageContext } from '../types/index'
+import type { IPageContext } from '../types/index'
 
 const [JS_EXPRESSION, JS_FUNCTION] = ['JSExpression', 'JSFunction']
 
 interface ParseItem {
   type: (data: any) => boolean
-  parseFunc: (data: any, scope: Record<string, any>, ctx: PageContext) => any
+  parseFunc: (data: any, scope: Record<string, any>, ctx: IPageContext) => any
 }
 
 interface StateData {
@@ -91,7 +91,7 @@ const transformJSX = (code: string): string => {
 
 const parseList: ParseItem[] = []
 
-export const parseData = (data: any, scope: Record<string, any> = {}, ctx: PageContext): any => {
+export const parseData = (data: any, scope: Record<string, any> = {}, ctx: IPageContext): any => {
   let res = data
   parseList.some((item) => {
     if (item.type(data)) {
@@ -109,7 +109,7 @@ export const newFn = (...argv: string[]): Function => {
   return new Fn(...argv)
 }
 
-const parseExpression = (data: JSData, scope: Record<string, any>, ctx: PageContext, isJsx = false): any => {
+const parseExpression = (data: JSData, scope: Record<string, any>, ctx: IPageContext, isJsx = false): any => {
   try {
     const mergeScope: Record<string, any> = {
       ...ctx,
@@ -161,7 +161,7 @@ const parseFunctionString = (fnStr: string): { type: string; name: string; param
 }
 
 // 解析JSX字符串为可执行函数
-const parseJSXFunction = (data: JSData, ctx: PageContext): Function => {
+const parseJSXFunction = (data: JSData, ctx: IPageContext): Function => {
   try {
     const newValue = transformJSX(data.value)
     const fnInfo = parseFunctionString(newValue)
@@ -177,7 +177,7 @@ const parseJSXFunction = (data: JSData, ctx: PageContext): Function => {
   }
 }
 
-const parseJSFunction = (data: JSData, _scope: Record<string, any>, ctx: PageContext): Function => {
+const parseJSFunction = (data: JSData, _scope: Record<string, any>, ctx: IPageContext): Function => {
   try {
     const innerFn = newFn(`return ${data.value}`).bind(ctx)()
     return generateFn(innerFn, ctx)
@@ -186,7 +186,7 @@ const parseJSFunction = (data: JSData, _scope: Record<string, any>, ctx: PageCon
   }
 }
 
-const parseObjectData = (data: ObjectData, scope: Record<string, any>, ctx: PageContext): any => {
+const parseObjectData = (data: ObjectData, scope: Record<string, any>, ctx: IPageContext): any => {
   if (!data) {
     return data
   }
@@ -237,11 +237,11 @@ const parseString = (data: string): string => {
   return data.trim()
 }
 
-const parseArray = (data: any[], scope: Record<string, any>, ctx: PageContext): any[] => {
+const parseArray = (data: any[], scope: Record<string, any>, ctx: IPageContext): any[] => {
   return data.map((item) => parseData(item, scope, ctx))
 }
 
-const parseFunction = (data: Function, _scope: Record<string, any>, ctx: PageContext): Function => {
+const parseFunction = (data: Function, _scope: Record<string, any>, ctx: IPageContext): Function => {
   return data.bind(ctx)
 }
 
@@ -251,7 +251,7 @@ const renderDefault = (value: any, _scope: Record<string, any>, _data: any): any
   return value
 }
 
-const generateFn = (innerFn: any, _ctx: PageContext): Function => {
+const generateFn = (innerFn: any, _ctx: IPageContext): Function => {
   // 实现生成函数的逻辑
   return innerFn
 }

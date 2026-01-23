@@ -3,19 +3,20 @@ import type { Component } from 'vue'
 import useContext from './use-context'
 import { createRenderer } from './renderer'
 import Loading from './Loading.vue'
-import _ from 'lodash'
+import isEqual from 'lodash/isEqual'
+import cloneDeep from 'lodash/cloneDeep'
 import { parseData } from './data-parser'
-import type { Schema, SchemaRendererOptions } from '../types/index'
+import type { ISchema, ISchemaRendererOptions } from '../types/index'
 import { setPageCss } from './page-css'
 import useCustomSetting from './useCustomSetting'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 
-export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Component => {
+export const createSchemaRenderer = (options: ISchemaRendererOptions = {}): Component => {
   return defineComponent({
     name: 'SchemaRenderer',
     props: {
       schema: {
-        type: Object as () => Schema,
+        type: Object as () => ISchema,
         default: () => ({})
       }
     },
@@ -41,7 +42,7 @@ export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Compo
 
       provide('pageContext', context)
 
-      const pageSchema = reactive<Schema>({})
+      const pageSchema = reactive<ISchema>({})
       const methods: Record<string, any> = {}
       const state = reactive<Record<string, any>>({})
 
@@ -68,7 +69,7 @@ export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Compo
         Object.assign(state, parseData(data, {}, getContext()) || {})
       }
 
-      const setSchema = async (data: Schema): Promise<void> => {
+      const setSchema = async (data: ISchema): Promise<void> => {
         if (!data || !Object.keys(data).length) {
           return
         }
@@ -93,12 +94,12 @@ export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Compo
 
       watchEffect(() => {
         // 最后一个判断与上一次的schema做比较，以解决组件循环刷新问题
-        if (!props.schema || !Object.keys(props.schema) || _.isEqual(props.schema, oldSchema.value)) {
+        if (!props.schema || !Object.keys(props.schema) || isEqual(props.schema, oldSchema.value)) {
           return
         }
 
         // 缓存schema
-        oldSchema.value = _.cloneDeep(props.schema)
+        oldSchema.value = cloneDeep(props.schema)
 
         setSchema(props.schema)
       })

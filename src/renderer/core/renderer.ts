@@ -6,25 +6,20 @@ import {
   setComponentResolver
 } from './materials-functions'
 import { parseData } from './data-parser'
-import type { Schema, SchemaChild, PageContext, SchemaRendererOptions } from '../types/index'
-
-interface LoopArgs {
-  item?: string
-  index?: string
-}
+import type { ISchema, ISchemaChild, IPageContext, ISchemaRendererOptions, ILoopArgs } from '../types/index'
 
 interface LoopScopeParams {
   scope: Record<string, any>
   index: number
   item: any
-  loopArgs?: LoopArgs
+  loopArgs?: ILoopArgs
 }
 
 interface ConfigureData {
   [key: string]: any
 }
 
-const getBindProps = (schema: SchemaChild, scope: Record<string, any>, context: PageContext): Record<string, any> => {
+const getBindProps = (schema: ISchemaChild, scope: Record<string, any>, context: IPageContext): Record<string, any> => {
   const { componentName } = schema
 
   if (componentName === 'CanvasPlaceholder') {
@@ -48,7 +43,7 @@ const getBindProps = (schema: SchemaChild, scope: Record<string, any>, context: 
   return bindProps
 }
 
-function renderComponent(schema: SchemaChild, scope: Record<string, any> = {}, context: PageContext): VNode | null {
+function renderComponent(schema: ISchemaChild, scope: Record<string, any> = {}, context: IPageContext): VNode | null {
   const { componentName, loop, loopArgs, condition } = schema
 
   if (!componentName) {
@@ -91,7 +86,7 @@ function renderComponent(schema: SchemaChild, scope: Record<string, any> = {}, c
   return renderElement(null, 0)
 }
 
-const parseCondition = (condition: any, scope: Record<string, any>, context: PageContext): boolean => {
+const parseCondition = (condition: any, scope: Record<string, any>, context: IPageContext): boolean => {
   if (!condition) {
     return true
   }
@@ -105,7 +100,7 @@ const parseLoopArgs = ({
 }: {
   item: any
   index: number
-  loopArgs?: LoopArgs
+  loopArgs?: ILoopArgs
 }): Record<string, any> => {
   if (!loopArgs) {
     return { item, index }
@@ -127,7 +122,7 @@ const getLoopScope = ({ scope, index, item, loopArgs }: LoopScopeParams): Record
   }
 }
 
-const injectPlaceholder = (componentName: string, children: SchemaChild[] | undefined): SchemaChild[] => {
+const injectPlaceholder = (componentName: string, children: ISchemaChild[] | undefined): ISchemaChild[] => {
   const isEmptyArr = Array.isArray(children) && !children.length
 
   if (configure[componentName]?.isContainer && (!children || isEmptyArr)) {
@@ -141,16 +136,16 @@ const injectPlaceholder = (componentName: string, children: SchemaChild[] | unde
   return children || []
 }
 
-const hasDirectTemplateChildren = (children: SchemaChild[]): boolean => {
+const hasDirectTemplateChildren = (children: ISchemaChild[]): boolean => {
   return children.some((child) => child.componentName === 'Template')
 }
 
-const renderSlot = (children: SchemaChild[], mergeScope: Record<string, any>, _schema: SchemaChild): any => {
+const renderSlot = (children: ISchemaChild[], mergeScope: Record<string, any>, _schema: ISchemaChild): any => {
   // 实现渲染插槽的逻辑
-  return children.map((child) => renderComponent(child, mergeScope, {} as PageContext)).filter(Boolean)
+  return children.map((child) => renderComponent(child, mergeScope, {} as IPageContext)).filter(Boolean)
 }
 
-const getChildren = (schema: SchemaChild, mergeScope: Record<string, any>, context: PageContext): any => {
+const getChildren = (schema: ISchemaChild, mergeScope: Record<string, any>, context: IPageContext): any => {
   const { componentName, children } = schema
   const renderChildren = injectPlaceholder(componentName, children)
 
@@ -185,7 +180,7 @@ export const renderer = defineComponent({
   name: 'renderer',
   props: {
     schema: {
-      type: Object as () => SchemaChild,
+      type: Object as () => ISchemaChild,
       required: true
     },
     scope: {
@@ -193,7 +188,7 @@ export const renderer = defineComponent({
       default: () => ({})
     },
     parent: {
-      type: Object as () => Schema,
+      type: Object as () => ISchema,
       default: () => ({})
     }
   },
@@ -201,14 +196,14 @@ export const renderer = defineComponent({
     provide('schema', props.schema)
   },
   render() {
-    const context = inject('pageContext') as PageContext
+    const context = inject('pageContext') as IPageContext
     const { scope, schema } = this
 
     return renderComponent(schema, scope, context)
   }
 })
 
-export const createRenderer = (options: SchemaRendererOptions = {}) => {
+export const createRenderer = (options: ISchemaRendererOptions = {}) => {
   const { builtInExcludes = [], componentResolver } = options
 
   excludeBuiltinComponents(builtInExcludes)

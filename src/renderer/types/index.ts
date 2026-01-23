@@ -2,29 +2,29 @@ import { Component, ComponentPublicInstance } from 'vue'
 import type { BuiltinComponentsName } from '../core/materials-functions'
 
 // Schema 相关类型定义
-export interface SchemaProps {
+export interface ISchemaProps {
   [key: string]: any
 }
 
-export interface LoopArgs {
+export interface ILoopArgs {
   item?: string
   index?: string
 }
 
-export interface SchemaChild {
+export interface ISchemaChild {
   componentName: string
-  props?: SchemaProps
+  props?: ISchemaProps
   loop?: any
-  loopArgs?: LoopArgs
+  loopArgs?: ILoopArgs
   condition?: any
-  children?: SchemaChild[]
+  children?: ISchemaChild[]
   [key: string]: any
 }
 
-export interface Schema {
+export interface ISchema {
   componentName?: string
-  props?: SchemaProps
-  children?: SchemaChild[]
+  props?: ISchemaProps
+  children?: ISchemaChild[]
   state?: Record<string, any>
   methods?: Record<string, any>
   css?: string
@@ -32,7 +32,7 @@ export interface Schema {
 }
 
 // 渲染器选项类型
-export interface SchemaRendererOptions {
+export interface ISchemaRendererOptions {
   builtInExcludes?: BuiltinComponentsName[]
   loading?: boolean
   loadingComponent?: Component
@@ -40,54 +40,48 @@ export interface SchemaRendererOptions {
 }
 
 // 上下文类型
-export interface PageContext {
+export interface IPageContext {
   state?: Record<string, any>
   [key: string]: any
 }
 
 // 组件注册相关类型
-export interface CustomComponent {
+export interface ICustomComponent {
   name: string
   component: Component
 }
 
 // 渲染器函数类型
-export interface RendererFunction {
-  (schema: SchemaChild, parent?: Schema): ComponentPublicInstance | null
-}
+export type RendererFunction = (schema: ISchemaChild, parent?: ISchema) => ComponentPublicInstance | null
 
 // 解析数据函数类型
-export interface ParseDataFunction {
-  (data: any, context?: Record<string, any>, parentContext?: PageContext): any
-}
+export type ParseDataFunction = (data: any, context?: Record<string, any>, parentContext?: IPageContext) => any
 
 // 内置组件类型
-export interface BuiltinComponents {
+export interface IBuiltinComponents {
   [key: string]: Component
 }
 
 // 自定义组件类型
-export interface CustomComponents {
+export interface ICustomComponents {
   [key: string]: Component
 }
 
 // 上下文钩子返回类型
-export interface UseContextReturn {
-  context: PageContext
-  oldSchema: { value: Schema | null }
-  setContext: (ctx: PageContext, clear?: boolean) => void
-  getContext: () => PageContext
+export interface IUseContextReturn {
+  context: IPageContext
+  oldSchema: { value: ISchema | null }
+  setContext: (ctx: IPageContext, clear?: boolean) => void
+  getContext: () => IPageContext
 }
 
 // 创建渲染器返回类型
-export interface CreateSchemaRendererReturn {
-  (props: { schema: Schema }): ComponentPublicInstance
-}
+export type CreateSchemaRendererReturn = (props: { schema: ISchema }) => ComponentPublicInstance
 
 // 组件属性类型
 export interface IComponentProps {
-  schema: Schema
-  parent?: Schema
+  schema: ISchema
+  parent?: ISchema
   [key: string]: any
 }
 

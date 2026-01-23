@@ -17,7 +17,7 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from '../builtin'
-import type { CustomComponents } from '../types/index'
+import type { ICustomComponents } from '../types/index'
 
 export const builtinComponents = {
   Icon: CanvasIcon,
@@ -49,7 +49,7 @@ export const getBuiltinComponent = (name: string): Component | undefined => {
 
 export type BuiltinComponentsName = keyof typeof builtinComponents
 
-export const customComponents: CustomComponents = {}
+export const customComponents: ICustomComponents = {}
 
 export const registerCustomComponent = (name: string, component: Component): void => {
   customComponents[name] = component

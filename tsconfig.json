@@ -33,10 +33,7 @@
     "renderer/**/*.d.ts",
     "renderer/**/*.tsx",
     "renderer/**/*.vue",
-    "examples/**/*.ts",
-    "examples/**/*.d.ts",
-    "examples/**/*.tsx",
-    "examples/**/*.vue"
+    "*.ts"
   ],
   "exclude": [
     "node_modules",
