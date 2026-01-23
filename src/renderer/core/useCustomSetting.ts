@@ -1,7 +1,8 @@
-const customSettings = {}
+import type { ICustomSettings } from '../types'
 
+const customSettings: ICustomSettings = {}
 
-export const setCustomSettings = (rendererSettings) => {
+export const setCustomSettings = (rendererSettings: ICustomSettings): void => {
   if (rendererSettings && typeof rendererSettings === 'object') {
     Object.assign(customSettings, rendererSettings)
   }

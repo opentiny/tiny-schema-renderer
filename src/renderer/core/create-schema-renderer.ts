@@ -1,10 +1,14 @@
-import { h, provide, nextTick, reactive, watchEffect, defineComponent, type Component } from 'vue'
+import { h, provide, nextTick, reactive, watchEffect, defineComponent, inject } from 'vue'
+import type { Component } from 'vue'
 import useContext from './use-context'
 import { createRenderer } from './renderer'
 import Loading from './Loading.vue'
 import _ from 'lodash'
 import { parseData } from './data-parser'
-import type { Schema, SchemaRendererOptions, PageContext } from '../types/index'
+import type { Schema, SchemaRendererOptions } from '../types/index'
+import { setPageCss } from './page-css'
+import useCustomSetting from './useCustomSetting'
+import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 
 export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Component => {
   return defineComponent({
@@ -17,8 +21,22 @@ export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Compo
     },
     setup(props) {
       const { context, oldSchema, setContext, getContext } = useContext()
+      const cssScopeId = `data-schema-${Math.random().toString(36).slice(2, 8)}`
       const reset = (obj: Record<string, any>): void => {
         Object.keys(obj).forEach((key) => delete obj[key])
+      }
+
+      // 设置 customSettings，如 Function
+      const { setCustomSettings } = useCustomSetting()
+
+      const customSettings = inject(RENDERER_SETTINGS_KEY, null)
+      if (customSettings) {
+        setCustomSettings(customSettings)
+      }
+
+      const customContext = inject('customContext')
+      if (customContext) {
+        setContext({ customContext })
       }
 
       provide('pageContext', context)
@@ -50,33 +68,14 @@ export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Compo
         Object.assign(state, parseData(data, {}, getContext()) || {})
       }
 
-      const setPageCss = (css = ''): void => {
-        const id = 'page-css'
-        let element = document.getElementById(id)
-        const head = document.querySelector('head')
-
-        document.body.setAttribute('style', '')
-
-        if (!element) {
-          element = document.createElement('style')
-          element.setAttribute('type', 'text/css')
-          element.setAttribute('id', id)
-
-          element.innerHTML = css
-          head?.appendChild(element)
-        } else {
-          element.innerHTML = css
-        }
-      }
-
       const setSchema = async (data: Schema): Promise<void> => {
-        if (!data) {
+        if (!data || !Object.keys(data).length) {
           return
         }
         const newSchema = JSON.parse(JSON.stringify(data))
-
-        const context: PageContext = {
-          state
+        const context = {
+          state,
+          cssScopeId
         }
         // 此处提升很重要，因为setState、initProps也会触发画布重新渲染，所以需要提升上下文环境的设置时间
         setContext(context, true)
@@ -87,7 +86,7 @@ export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Compo
         // 这里setState（会触发画布渲染），是因为状态管理里面的变量会用到props、utils、bridge、stores、methods
         setState(newSchema.state, true)
         await nextTick()
-        setPageCss(data.css)
+        setPageCss(data.css || '', cssScopeId)
 
         Object.assign(pageSchema, newSchema)
       }
@@ -125,8 +124,8 @@ export const createSchemaRenderer = (options: SchemaRendererOptions = {}): Compo
       return this.pageSchema.children?.length
         ? h(renderer as any, { schema: rootChildrenSchema, parent: this.pageSchema })
         : loading
-        ? [h(loadingComponent as any)]
-        : []
+          ? [h(loadingComponent as any)]
+          : []
     }
   })
 }

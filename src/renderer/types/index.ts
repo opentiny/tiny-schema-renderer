@@ -85,8 +85,12 @@ export interface CreateSchemaRendererReturn {
 }
 
 // 组件属性类型
-export interface ComponentProps {
+export interface IComponentProps {
   schema: Schema
   parent?: Schema
   [key: string]: any
+}
+
+export interface ICustomSettings {
+  Function?: Function
 }
