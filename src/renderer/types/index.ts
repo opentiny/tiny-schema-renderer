@@ -1,4 +1,4 @@
-import { Component, ComponentPublicInstance } from 'vue';
+import type { Component, ComponentPublicInstance } from 'vue';
 import type { BuiltinComponentsName } from '../core/materials-functions';
 
 // Schema 相关类型定义

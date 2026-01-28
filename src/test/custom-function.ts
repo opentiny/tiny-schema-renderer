@@ -1,4 +1,4 @@
-/// <reference path="./src/renderer/types/modules.d.ts" />
+/// <reference path="../renderer/types/modules.d.ts" />
 import { transform } from '@babel/standalone'
 import { Interpreter, Function } from 'eval5'
 Interpreter.global = window

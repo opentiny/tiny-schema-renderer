@@ -8,7 +8,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import { parseData } from './data-parser';
 import type { ISchema, ISchemaRendererOptions } from '../types/index';
 import { setPageCss } from './page-css';
-import useCustomSetting from './useCustomSetting';
+import useCustomSetting from './use-custom-setting';
 import { RENDERER_SETTINGS_KEY } from './renderer-settings';
 
 export const createSchemaRenderer = (options: ISchemaRendererOptions = {}): Component => {

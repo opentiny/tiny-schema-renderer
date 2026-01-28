@@ -8,7 +8,7 @@ export const setCustomSettings = (rendererSettings: ICustomSettings): void => {
   }
 };
 
-export const getCustomSettings = () => customSettings;
+export const getCustomSettings = (): ICustomSettings => customSettings;
 
 export default function useCustomSetting() {
   return {

@@ -5,6 +5,7 @@ import { resolve } from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
+  root: resolve(__dirname, 'src/test'),
   plugins: [
     vue(),
     vueJsx(),
