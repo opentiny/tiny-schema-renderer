@@ -1,9 +1,10 @@
+/// <reference path="../renderer/types/modules.d.ts" />
 import { transform } from '@babel/standalone'
 import { Interpreter, Function } from 'eval5'
 Interpreter.global = window
 
 export class CustomFunction {
-  constructor(...argv) {
+  constructor(...argv: string[]) {
     if (argv.length > 0) {
       const lastArg = argv[argv.length - 1]
       // 将代码包装在函数中以避免顶层 return 语句报错
@@ -13,14 +14,15 @@ export class CustomFunction {
         sourceType: 'script' // 使用 script 模式，避免严格模式导致 with 语句报错
       })
       // 提取转换后的代码，移除包装函数
-      const transformedCode = res.code
-        .replace(/^\(function\s*\(\)\s*\{/, '') // 移除开头的包装
-        .replace(/\}\)\(\);?$/, '') // 移除结尾的包装
-        .trim()
+      const transformedCode =
+        res.code
+          ?.replace(/^\(function\s*\(\)\s*\{/, '') // 移除开头的包装
+          .replace(/\}\)\(\);?$/, '') // 移除结尾的包装
+          .trim() || ''
       argv[argv.length - 1] = transformedCode
     }
 
-    const Fn = Function
+    const Fn = Function as unknown as new (...args: string[]) => Function
 
     return new Fn(...argv)
   }

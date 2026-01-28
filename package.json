@@ -9,16 +9,23 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "pub": "pnpm publish --no-git-checks --access=public"
+    "pub": "pnpm publish --no-git-checks --access=public",
+    "build:types": "tsc --emitDeclarationOnly",
+    "type-check": "tsc --noEmit"
   },
   "main": "dist/index.js",
   "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "types": "./dist/index.d.ts"
     }
   },
   "repository": {
@@ -43,16 +50,20 @@
     "postcss-selector-parser": "^7.1.0"
   },
   "devDependencies": {
-    "@babel/standalone": "^7.23.0",
+    "@types/babel__core": "^7.20.5",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^20.19.11",
+    "rollup-plugin-visualizer": "^5.12.0",
+    "typescript": "^5.9.2",
     "@opentiny/vue": "3.25.0",
     "@opentiny/vue-theme": "3.25.0",
+    "@opentiny/vue-icon": "3.25.0",
     "@opentiny/vue-chart-bar": "~3.14.0",
     "@opentiny/vue-chart-histogram": "~3.14.0",
     "@opentiny/vue-chart-line": "~3.14.0",
     "@opentiny/vue-chart-pie": "~3.14.0",
     "@opentiny/vue-chart-radar": "~3.14.0",
     "@opentiny/vue-chart-ring": "3.14.0",
-    "@opentiny/vue-icon": "3.25.0",
     "@vitejs/plugin-vue": "^5.1.2",
     "@vitejs/plugin-vue-jsx": "^4.0.1",
     "eval5": "^1.4.8",
