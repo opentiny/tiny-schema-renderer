@@ -14,10 +14,11 @@ export class CustomFunction {
         sourceType: 'script' // 使用 script 模式，避免严格模式导致 with 语句报错
       })
       // 提取转换后的代码，移除包装函数
-      const transformedCode = res.code
-        ?.replace(/^\(function\s*\(\)\s*\{/, '') // 移除开头的包装
-        .replace(/\}\)\(\);?$/, '') // 移除结尾的包装
-        .trim() || ''
+      const transformedCode =
+        res.code
+          ?.replace(/^\(function\s*\(\)\s*\{/, '') // 移除开头的包装
+          .replace(/\}\)\(\);?$/, '') // 移除结尾的包装
+          .trim() || ''
       argv[argv.length - 1] = transformedCode
     }
 

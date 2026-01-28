@@ -1,3 +1,3 @@
-import { createSchemaRenderer } from './create-schema-renderer'
+import { createSchemaRenderer } from './create-schema-renderer';
 
-export const defaultRenderer = createSchemaRenderer()
+export const defaultRenderer = createSchemaRenderer();

@@ -1,24 +1,24 @@
-import postcss from 'postcss'
-import scopedPlugin from './scope-css-plugin'
+import postcss from 'postcss';
+import scopedPlugin from './scope-css-plugin';
 
 export function handleScopedCss(id: string, content: string) {
-  return postcss([scopedPlugin(id)]).process(content, { from: undefined })
+  return postcss([scopedPlugin(id)]).process(content, { from: undefined });
 }
 
 export function setPageCss(content: string, id: string) {
   if (!content) {
-    return
+    return;
   }
 
-  let styleSheet = document.querySelector(`#${id}`)
+  let styleSheet = document.querySelector(`#${id}`);
 
   if (!styleSheet) {
-    styleSheet = document.createElement('style')
-    styleSheet.setAttribute('id', id)
-    document.head.appendChild(styleSheet)
+    styleSheet = document.createElement('style');
+    styleSheet.setAttribute('id', id);
+    document.head.appendChild(styleSheet);
   }
 
   handleScopedCss(id, content).then((scopedCss) => {
-    styleSheet.textContent = scopedCss.css
-  })
+    styleSheet.textContent = scopedCss.css;
+  });
 }

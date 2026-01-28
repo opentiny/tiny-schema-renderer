@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import { resolve } from 'path'
-import { visualizer } from 'rollup-plugin-visualizer'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+import { resolve } from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   plugins: [
@@ -13,8 +13,8 @@ export default defineConfig({
       open: false,
       gzipSize: true,
       brotliSize: true,
-      template: 'treemap' // 可选: 'sunburst' | 'treemap' | 'network'
-    })
+      template: 'treemap', // 可选: 'sunburst' | 'treemap' | 'network'
+    }),
   ],
   define: {
     'process.env': {},
@@ -22,14 +22,14 @@ export default defineConfig({
     'process.version': JSON.stringify(''),
     'process.versions': JSON.stringify({}),
     'process.browser': true,
-    'process.node': false
+    'process.node': false,
   },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'TinySchemaRenderer',
       fileName: 'index',
-      formats: ['es']
+      formats: ['es'],
     },
     minify: 'esbuild',
     rollupOptions: {
@@ -37,16 +37,16 @@ export default defineConfig({
       output: {
         globals: {
           vue: 'Vue',
-          '@vue/shared': 'VueShared'
-        }
+          '@vue/shared': 'VueShared',
+        },
       },
       treeshake: {
         moduleSideEffects: false,
-        propertyReadSideEffects: false
-      }
-    }
+        propertyReadSideEffects: false,
+      },
+    },
   },
   resolve: {
-    extensions: ['.ts', '.js', '.vue', '.jsx', '.tsx']
-  }
-})
+    extensions: ['.ts', '.js', '.vue', '.jsx', '.tsx'],
+  },
+});
