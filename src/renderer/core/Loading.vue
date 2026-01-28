@@ -8,7 +8,7 @@
   </div>
 </template>
 
-<style>
+<style scoped>
 .loading-warp {
   display: flex;
   flex-direction: column;
