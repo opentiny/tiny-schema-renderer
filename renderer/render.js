@@ -261,6 +261,9 @@ function renderComponent(schema, scope, context) {
 }
 
 const renderDefault = (children, scope, ctx) => {
+  if (!children) {
+    return []
+  }
   const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx))
 
   return childrenComponents.filter(Boolean)
