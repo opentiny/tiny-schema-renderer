@@ -42,7 +42,7 @@ export default {
       setCustomSettings(customSettings)
     }
 
-    const customContext = inject('customContext')
+    const customContext = inject('customContext', null)
     if (customContext) {
       setContext({ customContext })
     }
