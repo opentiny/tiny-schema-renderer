@@ -14,7 +14,7 @@ import { h, provide, inject } from 'vue'
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import babelPluginJSX from '@vue/babel-plugin-jsx'
 import { transformSync } from '@babel/core'
-import TinyVue, { Notify } from '@opentiny/vue'
+import Notify from '@opentiny/vue-notify'
 import {
   CanvasRow,
   CanvasCol,
@@ -32,12 +32,6 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
-import TinyChartPie from '@opentiny/vue-chart-pie'
-import TinyChartRadar from '@opentiny/vue-chart-radar'
-import TinyChartBar from '@opentiny/vue-chart-bar'
-import TinyChartHistogram from '@opentiny/vue-chart-histogram'
-import TinyChartLine from '@opentiny/vue-chart-line'
-import TinyChartRing from '@opentiny/vue-chart-ring'
 import useCustomSetting from './useCustomSetting'
 
 const { getCustomSettings } = useCustomSetting()
@@ -126,20 +120,10 @@ export const Mapper = {
   CanvasSection,
   CanvasPlaceholder,
   CanvasRouterLink,
-  CanvasRouterView,
-  TinyChartPie,
-  TinyChartRadar,
-  TinyChartBar,
-  TinyChartHistogram,
-  TinyChartLine,
-  TinyChartRing
+  CanvasRouterView
 }
 
 export const collectionMethodsMap = {}
-
-const getNative = (name) => {
-  return TinyVue?.[name]
-}
 
 const configure = {}
 
@@ -241,11 +225,11 @@ function renderComponent(schema, scope, context) {
   const renderElement = (item, index) => {
     let mergeScope = item
       ? getLoopScope({
-          item,
-          index,
-          loopArgs,
-          scope
-        })
+        item,
+        index,
+        loopArgs,
+        scope
+      })
       : scope
 
     if (!parseCondition(condition, mergeScope, context)) {
@@ -375,7 +359,12 @@ const generateCollection = (schema) => {
 }
 
 export const getComponent = (name) => {
-  return Mapper[name] || getNative(name) || customElements[name] || (isHTMLTag(name) ? name : null)
+  const customSettings = getCustomSettings()
+
+  return customSettings?.customComponentGetter?.(name)
+    || Mapper[name]
+    || customElements[name]
+    || (isHTMLTag(name) ? name : null)
 }
 
 // 解析JSX字符串为可执行函数
