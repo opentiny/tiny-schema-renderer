@@ -10,7 +10,7 @@
  *
  */
 
-import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured } from 'vue'
+import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject } from 'vue'
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
@@ -28,10 +28,6 @@ export default {
   },
   expose: ['setContext', 'getContext', 'setState'],
   setup(props) {
-    onErrorCaptured((error) => {
-      console.error('RenderMain error:', error);
-      return false;
-    });
     const { context, oldSchema, setContext, getContext } = useContext()
     const cssScopeId = `data-schema-${Math.random().toString(36).slice(2, 8)}`
     const reset = (obj) => {
@@ -129,7 +125,7 @@ export default {
     const rootChildrenSchema = {
       componentName: 'div',
       // 手动添加一个唯一的属性，后续在画布选中此节点时方便处理额外的逻辑。由于没有修改schema，不会影响出码
-      props: {},
+      props: this.pageSchema.props || {},
       children: this.pageSchema.children
     }
 
