@@ -14,7 +14,7 @@ import { h, provide, inject } from 'vue'
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import babelPluginJSX from '@vue/babel-plugin-jsx'
 import { transformSync } from '@babel/core'
-import TinyVue, { Notify } from '@opentiny/vue'
+import { Notify } from '@opentiny/vue'
 import {
   CanvasRow,
   CanvasCol,
@@ -40,7 +40,7 @@ import TinyChartLine from '@opentiny/vue-chart-line'
 import TinyChartRing from '@opentiny/vue-chart-ring'
 import useCustomSetting from './useCustomSetting'
 
-const { getCustomSettings } = useCustomSetting()
+const { getRendererSettingByKey } = useCustomSetting()
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
@@ -81,14 +81,13 @@ const isFunctionConstructor = (fn) => {
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
-  let Fn = Function
-  const customSettings = getCustomSettings()
+  const Fn = getRendererSettingByKey('Function')
 
-  if (customSettings.Function && isFunctionConstructor(customSettings.Function)) {
-    Fn = customSettings.Function
+  if (Fn && isFunctionConstructor(Fn)) {
+    return new Fn(...argv)
   }
 
-  return new Fn(...argv)
+  return new Function(...argv)
 }
 
 const transformJSX = (code) => {
@@ -138,7 +137,9 @@ export const Mapper = {
 export const collectionMethodsMap = {}
 
 const getNative = (name) => {
-  return TinyVue?.[name]
+  const materials = getRendererSettingByKey('materials')
+
+  return materials?.[name]
 }
 
 const configure = {}
@@ -241,11 +242,11 @@ function renderComponent(schema, scope, context) {
   const renderElement = (item, index) => {
     let mergeScope = item
       ? getLoopScope({
-          item,
-          index,
-          loopArgs,
-          scope
-        })
+        item,
+        index,
+        loopArgs,
+        scope
+      })
       : scope
 
     if (!parseCondition(condition, mergeScope, context)) {
