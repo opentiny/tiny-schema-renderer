@@ -40,7 +40,7 @@ import TinyChartLine from '@opentiny/vue-chart-line'
 import TinyChartRing from '@opentiny/vue-chart-ring'
 import useCustomSetting from './useCustomSetting'
 
-const { getRendererSettingByKey } = useCustomSetting()
+const { getRendererSetting } = useCustomSetting()
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
@@ -81,7 +81,7 @@ const isFunctionConstructor = (fn) => {
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
-  const Fn = getRendererSettingByKey('Function')
+  const Fn = getRendererSetting('Function')
 
   if (Fn && isFunctionConstructor(Fn)) {
     return new Fn(...argv)
@@ -137,7 +137,7 @@ export const Mapper = {
 export const collectionMethodsMap = {}
 
 const getNative = (name) => {
-  const materials = getRendererSettingByKey('materials')
+  const materials = getRendererSetting('materials')
 
   return materials?.[name]
 }
