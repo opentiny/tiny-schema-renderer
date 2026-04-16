@@ -19,7 +19,7 @@ import vueJsx from "@vitejs/plugin-vue-jsx";
 export default defineConfig({
   base: "./",
   define: {
-    'process.env': process.env
+    'process.env': {}
   },  
   plugins: [vue(), vueJsx()],
   publicDir: false,
