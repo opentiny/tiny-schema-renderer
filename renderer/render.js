@@ -64,7 +64,7 @@ import TinyTree from '@opentiny/vue-tree'
 import TinyTransfer from '@opentiny/vue-transfer'
 import TinyRadioGroup from '@opentiny/vue-radio-group'
 
-const { customSettings } = useCustomSetting()
+const { getCustomSettings } = useCustomSetting()
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
@@ -631,6 +631,10 @@ const getBindProps = (schema, scope, context) => {
 
   if (componentName === 'CanvasPlaceholder') {
     return {}
+  }
+  const applyDefaultProps = getCustomSettings()?.applyDefaultProps
+  if (typeof applyDefaultProps === 'function') {
+    applyDefaultProps(schema)
   }
 
   const { cssScopeId } = context
