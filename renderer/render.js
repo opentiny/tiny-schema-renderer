@@ -32,12 +32,6 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
-import TinyChartPie from '@opentiny/vue-chart-pie'
-import TinyChartRadar from '@opentiny/vue-chart-radar'
-import TinyChartBar from '@opentiny/vue-chart-bar'
-import TinyChartHistogram from '@opentiny/vue-chart-histogram'
-import TinyChartLine from '@opentiny/vue-chart-line'
-import TinyChartRing from '@opentiny/vue-chart-ring'
 import useCustomSetting from './useCustomSetting'
 
 const { getCustomSettings } = useCustomSetting()
@@ -126,13 +120,7 @@ export const Mapper = {
   CanvasSection,
   CanvasPlaceholder,
   CanvasRouterLink,
-  CanvasRouterView,
-  TinyChartPie,
-  TinyChartRadar,
-  TinyChartBar,
-  TinyChartHistogram,
-  TinyChartLine,
-  TinyChartRing
+  CanvasRouterView
 }
 
 export const collectionMethodsMap = {}
@@ -597,6 +585,10 @@ const getBindProps = (schema, scope, context) => {
 
   if (componentName === 'CanvasPlaceholder') {
     return {}
+  }
+  const applyDefaultProps = getCustomSettings()?.applyDefaultProps
+  if (typeof applyDefaultProps === 'function') {
+    applyDefaultProps(schema)
   }
 
   const { cssScopeId } = context
