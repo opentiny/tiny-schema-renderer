@@ -239,14 +239,12 @@ function renderComponent(schema, scope, context) {
   const loopList = parseData(loop, scope, context)
 
   const renderElement = (item, index) => {
-    let mergeScope = item
-      ? getLoopScope({
+    let mergeScope = getLoopScope({
           item,
           index,
           loopArgs,
           scope
         })
-      : scope
 
     if (!parseCondition(condition, mergeScope, context)) {
       return null
