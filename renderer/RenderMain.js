@@ -41,6 +41,12 @@ export default {
     if (customSettings) {
       setCustomSettings(customSettings)
     }
+
+    const customContext = inject('customContext', null)
+    if (customContext) {
+      setContext({ customContext })
+    }
+    
     const applyDefaultProps = inject(APPLY_DEFAULT_PROPS_KEY, null)
     if (typeof applyDefaultProps === 'function') {
       setCustomSettings({ applyDefaultProps })
