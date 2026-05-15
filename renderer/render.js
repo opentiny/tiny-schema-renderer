@@ -11,10 +11,10 @@
  */
 
 import { h, provide, inject } from 'vue'
+
 import { isHTMLTag, hyphenate } from '@vue/shared'
-import babelPluginJSX from '@vue/babel-plugin-jsx'
-import { transformSync } from '@babel/core'
-import { Notify } from '@opentiny/vue'
+import Notify from '@opentiny/vue-notify'
+import useCustomSetting from './useCustomSetting'
 import {
   CanvasRow,
   CanvasCol,
@@ -32,7 +32,37 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
-import useCustomSetting from './useCustomSetting'
+import TinyChartPie from '@opentiny/vue-chart-pie'
+import TinyChartRadar from '@opentiny/vue-chart-radar'
+import TinyChartBar from '@opentiny/vue-chart-bar'
+import TinyChartHistogram from '@opentiny/vue-chart-histogram'
+import TinyChartLine from '@opentiny/vue-chart-line'
+import TinyChartRing from '@opentiny/vue-chart-ring'
+import TinyButton from '@opentiny/vue-button'
+import TinyCarousel from '@opentiny/vue-carousel'
+import TinyCarouselItem from '@opentiny/vue-carousel-item'
+import TinyCol from '@opentiny/vue-col'
+import TinyDatePicker from '@opentiny/vue-date-picker'
+import TinyGrid from '@opentiny/vue-grid'
+import TinyForm from '@opentiny/vue-form'
+import TinyFormItem from '@opentiny/vue-form-item'
+import TinyInput from '@opentiny/vue-input'
+import TinyLayout from '@opentiny/vue-layout'
+import TinyRow from '@opentiny/vue-row'
+import TinySelect from '@opentiny/vue-select'
+import TinySearch from '@opentiny/vue-search'
+import TinyCard from '@opentiny/vue-card'
+import TinyCheckbox from '@opentiny/vue-checkbox'
+import TinyCheckboxButton from '@opentiny/vue-checkbox-button'
+import TinyCheckboxGroup from '@opentiny/vue-checkbox-group'
+import TinyNumeric from '@opentiny/vue-numeric'
+import TinyRadio from '@opentiny/vue-radio'
+import TinySwitch from '@opentiny/vue-switch'
+import TinyTabs from '@opentiny/vue-tabs'
+import TinyTabItem from '@opentiny/vue-tab-item'
+import TinyTree from '@opentiny/vue-tree'
+import TinyTransfer from '@opentiny/vue-transfer'
+import TinyRadioGroup from '@opentiny/vue-radio-group'
 
 const { getRendererSetting } = useCustomSetting()
 
@@ -85,23 +115,14 @@ export const newFn = (...argv) => {
 }
 
 const transformJSX = (code) => {
-  const res = transformSync(code, {
-    plugins: [
-      [
-        babelPluginJSX,
-        {
-          pragma: 'h',
-          isCustomElement: (name) => customElements[name]
-        }
-      ]
-    ]
-  })
-  return (res.code || '')
-    .replace(/import \{.+\} from "vue";/, '')
-    .replace(/h\(_?resolveComponent\((.*?)\)/g, `h(this.getComponent($1)`)
-    .replace(/_?resolveComponent/g, 'h')
-    .replace(/_?createTextVNode\((.*?)\)/g, '$1')
-    .trim()
+  const customSettings = getCustomSettings()
+
+  if (customSettings.transformJSX) {
+    return customSettings.transformJSX(code)
+  } else {
+    console.warn('当前不支持JSX解析，如需支持，请配置customSettings.transformJSX')
+    return code
+  }
 }
 
 export const Mapper = {
@@ -119,16 +140,41 @@ export const Mapper = {
   CanvasSection,
   CanvasPlaceholder,
   CanvasRouterLink,
-  CanvasRouterView
+  CanvasRouterView,
+  TinyChartPie,
+  TinyChartRadar,
+  TinyChartBar,
+  TinyChartHistogram,
+  TinyChartLine,
+  TinyChartRing,
+  TinyButton,
+  TinyCarousel,
+  TinyCarouselItem,
+  TinyCol,
+  TinyDatePicker,
+  TinyGrid,
+  TinyForm, 
+  TinyFormItem,
+  TinyInput, 
+  TinyLayout,
+  TinyRow,
+  TinySelect, 
+  TinySearch,
+  TinyCard, 
+  TinyCheckbox, 
+  TinyCheckboxButton,
+  TinyCheckboxGroup,
+  TinyNumeric, 
+  TinyRadio, 
+  TinySwitch, 
+  TinyTabs,
+  TinyTabItem,
+  TinyTree, 
+  TinyTransfer,
+  TinyRadioGroup,
 }
 
 export const collectionMethodsMap = {}
-
-const getNative = (name) => {
-  const materials = getRendererSetting('materials')
-
-  return materials?.[name]
-}
 
 const configure = {}
 
@@ -228,14 +274,12 @@ function renderComponent(schema, scope, context) {
   const loopList = parseData(loop, scope, context)
 
   const renderElement = (item, index) => {
-    let mergeScope = item
-      ? getLoopScope({
-        item,
-        index,
-        loopArgs,
-        scope
-      })
-      : scope
+    let mergeScope = getLoopScope({
+          item,
+          index,
+          loopArgs,
+          scope
+        })
 
     if (!parseCondition(condition, mergeScope, context)) {
       return null
@@ -364,7 +408,7 @@ const generateCollection = (schema) => {
 }
 
 export const getComponent = (name) => {
-  return Mapper[name] || getNative(name) || customElements[name] || (isHTMLTag(name) ? name : null)
+  return Mapper[name] || customElements[name] || (isHTMLTag(name) ? name : null)
 }
 
 // 解析JSX字符串为可执行函数

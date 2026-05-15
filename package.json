@@ -19,6 +19,9 @@
   "exports": {
     ".": {
       "import": "./dist/index.js"
+    },
+    "./transform-jsx": {
+      "import": "./dist/transform-jsx.js"
     }
   },
   "repository": {
@@ -44,7 +47,32 @@
   },
   "devDependencies": {
     "@babel/standalone": "^7.23.0",
-    "@opentiny/vue": "^3.28.0",
+    "@opentiny/vue-button": "^3.28.0",
+    "@opentiny/vue-carousel": "^3.28.0",
+    "@opentiny/vue-carousel-item": "^3.28.0",
+    "@opentiny/vue-checkbox-button": "^3.28.0",
+    "@opentiny/vue-grid": "^3.28.0",
+    "@opentiny/vue-col": "^3.28.0",
+    "@opentiny/vue-date-picker": "^3.28.0",
+    "@opentiny/vue-form": "^3.28.0",
+    "@opentiny/vue-form-item": "^3.28.0",
+    "@opentiny/vue-input": "^3.28.0",
+    "@opentiny/vue-layout": "^3.28.0",
+    "@opentiny/vue-row": "^3.28.0",
+    "@opentiny/vue-select": "^3.28.0",
+    "@opentiny/vue-search": "^3.28.0",
+    "@opentiny/vue-notify": "^3.28.0",
+    "@opentiny/vue-card": "^3.28.0",
+    "@opentiny/vue-checkbox": "^3.28.0",
+    "@opentiny/vue-checkbox-group": "^3.28.0",
+    "@opentiny/vue-numeric": "^3.28.0",
+    "@opentiny/vue-radio": "^3.28.0",
+    "@opentiny/vue-switch": "^3.28.0",
+    "@opentiny/vue-tabs": "^3.28.0",
+    "@opentiny/vue-tab-item": "^3.28.0",
+    "@opentiny/vue-tree": "^3.28.0",
+    "@opentiny/vue-transfer": "^3.28.0",
+    "@opentiny/vue-radio-group": "^3.28.0",
     "@opentiny/vue-renderless": "^3.28.2",
     "@opentiny/vue-theme": "^3.28.0",
     "@opentiny/vue-chart-bar": "~3.14.0",
@@ -56,6 +84,7 @@
     "@opentiny/vue-icon": "^3.28.0",
     "@vitejs/plugin-vue": "^5.1.2",
     "@vitejs/plugin-vue-jsx": "^4.0.1",
+    "rollup-plugin-visualizer": "6.0.5",
     "eval5": "^1.4.8",
     "vite": "^5.4.2",
     "vue": "^3.5.0"

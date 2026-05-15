@@ -19,7 +19,10 @@ import vueJsx from "@vitejs/plugin-vue-jsx";
 export default defineConfig({
   base: "./",
   define: {
-    'process.env': process.env
+    'process.env': {
+      NODE_ENV: "production",
+      NEED_PARSE_JSX: false
+    }
   },  
   plugins: [vue(), vueJsx()],
   publicDir: false,
@@ -28,6 +31,7 @@ export default defineConfig({
     lib: {
       entry: {
         index: path.resolve(__dirname, "./index.js"),
+        'transform-jsx': path.resolve(__dirname, "./renderer/transform-jsx.js"),
       },
       formats: ["es"],
     },
@@ -41,13 +45,13 @@ export default defineConfig({
             return `import "./${chunk.name}.css"`;
           }
           return "";
-        },
+        }
       },
       external: [
         "vue",
         /@opentiny\/tiny-engine.*/,
-        /@opentiny\/vue.*/,
-      ],
+        /@opentiny\/vue.*/
+      ]
     },
     minify: true,
   },
