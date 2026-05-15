@@ -35,17 +35,12 @@ export const setCustomSettings = (rendererSettings: IRendererSettings): void => 
 
 export const getCustomSettings = (): IRendererSettings => customSettings || {}
 
-export const getRendererSetting = <K extends keyof IRendererSettings>(key: K): IRendererSettings[K] =>
-  getCustomSettings()[key] ?? DEFAULT_RENDERER_SETTINGS[key]
-
 export default function useCustomSetting(): {
   setCustomSettings: (rendererSettings: IRendererSettings) => void
   getCustomSettings: () => IRendererSettings
-  getRendererSetting: <K extends keyof IRendererSettings>(key: K) => IRendererSettings[K]
 } {
   return {
     setCustomSettings,
-    getCustomSettings,
-    getRendererSetting
+    getCustomSettings
   }
 }

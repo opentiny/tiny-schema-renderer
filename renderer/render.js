@@ -14,7 +14,7 @@ import { h, provide, inject } from 'vue'
 
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import Notify from '@opentiny/vue-notify'
-import useCustomSetting from './useCustomSetting'
+import useCustomSetting, { DEFAULT_RENDERER_SETTINGS } from './useCustomSetting'
 import {
   CanvasRow,
   CanvasCol,
@@ -64,7 +64,7 @@ import TinyTree from '@opentiny/vue-tree'
 import TinyTransfer from '@opentiny/vue-transfer'
 import TinyRadioGroup from '@opentiny/vue-radio-group'
 
-const { getRendererSetting } = useCustomSetting()
+const { getCustomSettings } = useCustomSetting()
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
@@ -105,7 +105,7 @@ const isFunctionConstructor = (fn) => {
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
-  const Fn = getRendererSetting('Function')
+  const Fn = getCustomSettings().Function ?? DEFAULT_RENDERER_SETTINGS.Function
 
   if (Fn && isFunctionConstructor(Fn)) {
     return new Fn(...argv)
@@ -140,38 +140,7 @@ export const Mapper = {
   CanvasSection,
   CanvasPlaceholder,
   CanvasRouterLink,
-  CanvasRouterView,
-  TinyChartPie,
-  TinyChartRadar,
-  TinyChartBar,
-  TinyChartHistogram,
-  TinyChartLine,
-  TinyChartRing,
-  TinyButton,
-  TinyCarousel,
-  TinyCarouselItem,
-  TinyCol,
-  TinyDatePicker,
-  TinyGrid,
-  TinyForm, 
-  TinyFormItem,
-  TinyInput, 
-  TinyLayout,
-  TinyRow,
-  TinySelect, 
-  TinySearch,
-  TinyCard, 
-  TinyCheckbox, 
-  TinyCheckboxButton,
-  TinyCheckboxGroup,
-  TinyNumeric, 
-  TinyRadio, 
-  TinySwitch, 
-  TinyTabs,
-  TinyTabItem,
-  TinyTree, 
-  TinyTransfer,
-  TinyRadioGroup,
+  CanvasRouterView
 }
 
 export const collectionMethodsMap = {}
@@ -275,11 +244,11 @@ function renderComponent(schema, scope, context) {
 
   const renderElement = (item, index) => {
     let mergeScope = getLoopScope({
-          item,
-          index,
-          loopArgs,
-          scope
-        })
+      item,
+      index,
+      loopArgs,
+      scope
+    })
 
     if (!parseCondition(condition, mergeScope, context)) {
       return null
@@ -407,8 +376,14 @@ const generateCollection = (schema) => {
   }
 }
 
+const getMaterial = (name) => {
+  const materials = getCustomSettings().materials || DEFAULT_RENDERER_SETTINGS.materials
+
+  return materials?.[name]
+}
+
 export const getComponent = (name) => {
-  return Mapper[name] || customElements[name] || (isHTMLTag(name) ? name : null)
+  return Mapper[name] || getMaterial(name) || customElements[name] || (isHTMLTag(name) ? name : null)
 }
 
 // 解析JSX字符串为可执行函数
