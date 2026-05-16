@@ -275,12 +275,12 @@ function renderComponent(schema, scope, context) {
   const loopList = parseData(loop, scope, context)
 
   const renderElement = (item, index) => {
-    let mergeScope = getLoopScope({
+    let mergeScope = index !== undefined ? getLoopScope({
           item,
           index,
           loopArgs,
           scope
-        })
+        }) : scope
 
     if (!parseCondition(condition, mergeScope, context)) {
       return null
@@ -291,7 +291,7 @@ function renderComponent(schema, scope, context) {
     return Ele
   }
 
-  return loopList?.length ? loopList.map(renderElement) : renderElement()
+  return loop ? loopList?.map(renderElement) : renderElement()
 }
 
 const renderDefault = (children, scope, ctx) => {
