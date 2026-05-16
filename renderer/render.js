@@ -15,6 +15,7 @@ import { h, provide, inject } from 'vue'
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import Notify from '@opentiny/vue-notify'
 import useCustomSetting from './useCustomSetting'
+import { createRefSetter, parseRefName } from './refs'
 import {
   CanvasRow,
   CanvasCol,
@@ -257,7 +258,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
 }
 
 function renderComponent(schema, scope, context) {
-  const { componentName, loop, loopArgs, condition } = schema
+  const { componentName, loop, loopArgs, condition, ref } = schema
 
   // 处理数据源和表格fetchData的映射关系
   generateCollection(schema)
@@ -286,7 +287,14 @@ function renderComponent(schema, scope, context) {
       return null
     }
 
-    const Ele = h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context))
+    const bindProps = getBindProps(schema, mergeScope, context)
+    const refName = parseRefName(ref, mergeScope, context, parseData)
+
+    if (refName && context?.$refs) {
+      bindProps.ref = createRefSetter(refName, context.$refs, index)
+    }
+
+    const Ele = h(component, bindProps, getChildren(schema, mergeScope, context))
 
     return Ele
   }
