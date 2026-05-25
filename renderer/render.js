@@ -32,6 +32,7 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
+import TinyPager from '@opentiny/vue-pager'
 import TinyChartPie from '@opentiny/vue-chart-pie'
 import TinyChartRadar from '@opentiny/vue-chart-radar'
 import TinyChartBar from '@opentiny/vue-chart-bar'
@@ -142,6 +143,7 @@ export const Mapper = {
   CanvasPlaceholder,
   CanvasRouterLink,
   CanvasRouterView,
+  TinyPager,
   TinyChartPie,
   TinyChartRadar,
   TinyChartBar,
