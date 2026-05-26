@@ -13,7 +13,7 @@ export interface LifeCycles {
 const parseLifeCycleFn = (
   source: JSFunctionDescriptor | undefined,
   getContext: () => any
-): (() => void) | null => {
+): (() => void | Promise<void>) | null => {
   if (!source || source.type !== 'JSFunction') {
     return null
   }

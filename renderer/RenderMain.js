@@ -59,11 +59,17 @@ export default {
     const state = reactive({})
     let pageOnUnmounted = null
 
-    const invokePageOnUnmounted = () => {
-      if (typeof pageOnUnmounted === 'function') {
-        pageOnUnmounted()
-      }
+    const invokePageOnUnmounted = async () => {
+      const fn = pageOnUnmounted
       pageOnUnmounted = null
+      if (typeof fn !== 'function') {
+        return
+      }
+      try {
+        await fn()
+      } catch (error) {
+        console.error('RenderMain onUnmounted error:', error)
+      }
     }
 
     const setMethods = (data = {}, clear) => {
@@ -107,7 +113,7 @@ export default {
       // 这里setState（会触发画布渲染），是因为状态管理里面的变量会用到props、utils、bridge、stores、methods
       setState(newSchema.state, true)
 
-      invokePageOnUnmounted()
+      await invokePageOnUnmounted()
       const { onMounted: onMountedFn, onUnmounted: onUnmountedFn } = getPageLifeCycleFns(
         newSchema.lifeCycles,
         getContext
@@ -125,8 +131,8 @@ export default {
       }
     }
 
-    onBeforeUnmount(() => {
-      invokePageOnUnmounted()
+    onBeforeUnmount(async () => {
+      await invokePageOnUnmounted()
     })
 
     watchEffect(() => {
