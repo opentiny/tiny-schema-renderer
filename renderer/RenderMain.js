@@ -18,7 +18,7 @@ import useContext from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
-import { getPageLifeCycleFns } from './lifeCycles.js'
+import { getPageLifeCycleFns } from './lifeCycles'
 
 export default {
   props: {
