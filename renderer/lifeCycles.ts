@@ -1,27 +1,33 @@
 import { parseData } from './render'
 
-export interface LifeCycles {
-  onMounted: {
-    type: 'JSFunction'
-    value: string
-  }
-  onUnmounted: {
-    type: 'JSFunction'
-    value: string
-  }
+export interface JSFunctionDescriptor {
+  type: 'JSFunction'
+  value: string
 }
 
-const parseLifeCycleFn = (source: { type: 'JSFunction'; value: string }, getContext: () => any): Function => {
+export interface LifeCycles {
+  onMounted?: JSFunctionDescriptor
+  onUnmounted?: JSFunctionDescriptor
+}
+
+const parseLifeCycleFn = (
+  source: JSFunctionDescriptor | undefined,
+  getContext: () => any
+): (() => void) | null => {
   if (!source || source.type !== 'JSFunction') {
-    return () => {}
+    return null
   }
   const fn = parseData(source, {}, getContext())
-  return typeof fn === 'function' ? fn : () => {}
+  return typeof fn === 'function' ? fn : null
 }
 
-export const getPageLifeCycleFns = (lifeCycles: LifeCycles, getContext: () => any) => {
+export const getPageLifeCycleFns = (
+  lifeCycles: LifeCycles | null | undefined,
+  getContext: () => any
+) => {
+  const cycles = lifeCycles ?? {}
   return {
-    onMounted: parseLifeCycleFn(lifeCycles.onMounted, getContext),
-    onUnmounted: parseLifeCycleFn(lifeCycles.onUnmounted, getContext)
+    onMounted: parseLifeCycleFn(cycles.onMounted, getContext),
+    onUnmounted: parseLifeCycleFn(cycles.onUnmounted, getContext)
   }
 }
