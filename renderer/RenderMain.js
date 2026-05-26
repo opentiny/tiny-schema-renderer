@@ -118,7 +118,11 @@ export default {
       setPageCss(data.css, cssScopeId)
       Object.assign(pageSchema, newSchema)
       await nextTick()
-      onMountedFn?.()
+      try {
+        await onMountedFn?.()
+      } catch (error) {
+        console.error('RenderMain onMounted error:', error)
+      }
     }
 
     onBeforeUnmount(() => {
