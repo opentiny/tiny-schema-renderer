@@ -10,7 +10,7 @@
  *
  */
 
-import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured } from 'vue'
+import { h, provide, nextTick, reactive, watchEffect, inject, onErrorCaptured, onBeforeUnmount } from 'vue'
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
@@ -18,6 +18,7 @@ import useContext from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
+import { getPageLifeCycleFns } from './lifeCycles.js'
 
 export default {
   props: {
@@ -56,6 +57,14 @@ export default {
     const pageSchema = reactive({})
     const methods = {}
     const state = reactive({})
+    let pageOnUnmounted = null
+
+    const invokePageOnUnmounted = () => {
+      if (typeof pageOnUnmounted === 'function') {
+        pageOnUnmounted()
+      }
+      pageOnUnmounted = null
+    }
 
     const setMethods = (data = {}, clear) => {
       clear && reset(methods)
@@ -97,11 +106,24 @@ export default {
 
       // 这里setState（会触发画布渲染），是因为状态管理里面的变量会用到props、utils、bridge、stores、methods
       setState(newSchema.state, true)
+
+      invokePageOnUnmounted()
+      const { onMounted: onMountedFn, onUnmounted: onUnmountedFn } = getPageLifeCycleFns(
+        newSchema.lifeCycles,
+        getContext
+      )
+      pageOnUnmounted = onUnmountedFn
+
       await nextTick()
       setPageCss(data.css, cssScopeId)
-
       Object.assign(pageSchema, newSchema)
+      await nextTick()
+      onMountedFn?.()
     }
+
+    onBeforeUnmount(() => {
+      invokePageOnUnmounted()
+    })
 
     watchEffect(() => {
       // 最后一个判断与上一次的schema做比较，以解决组件循环刷新问题
