@@ -21,7 +21,7 @@
       "password": ""
     },
     "formRef": null,
-    "formItemRef": []
+    "formItemRef": null
   },
   "lifeCycles": {},
   "children": [
