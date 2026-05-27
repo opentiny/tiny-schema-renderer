@@ -1,70 +1,82 @@
-export const clearRefs = (refsStore = {}) => {
-  Object.keys(refsStore).forEach((key) => {
-    delete refsStore[key]
-  })
-}
+const JS_EXPRESSION = 'JSExpression'
 
-const removeLoopRef = (refsStore, refName, loopIndex, instance) => {
-  const list = refsStore[refName]
-  if (!Array.isArray(list)) {
-    delete refsStore[refName]
-    return
+const isJSExpression = (data) => data && data.type === JS_EXPRESSION
+
+/**
+ * 解析 props.ref，仅支持指向 state 的 JSExpression（如 this.state.formRef）
+ * @param {import('./render').PropValue | undefined} ref
+ * @returns {{ expression: string } | null}
+ */
+export const resolveRefBinding = (ref) => {
+  if (!isJSExpression(ref)) {
+    return null
   }
 
-  if (list[loopIndex] === instance) {
-    list[loopIndex] = undefined
+  const expression = ref.value?.trim()
+  if (!expression) {
+    return null
   }
 
-  if (list.every((item) => item == null)) {
-    delete refsStore[refName]
-  }
+  return { expression }
 }
 
 /**
- * @param {string} refName
- * @param {Record<string, any>} refsStore
- * @param {number | undefined} loopIndex loop 渲染时的下标
+ * 生成 Vue callback ref，将组件实例写入 state 中 ref 表达式指向的位置
+ * @param {{ expression: string } | null} refBinding
+ * @param {Record<string, any>} scope
+ * @param {Record<string, any>} ctx
+ * @param {number | undefined} loopIndex
+ * @param {typeof import('./render').newFn} newFn
  */
-export const createRefSetter = (refName, refsStore, loopIndex) => {
-  return (instance) => {
-    if (!refName || !refsStore) {
-      return
+export const createRefSetter = (refBinding, scope, ctx, loopIndex, newFn) => {
+  if (!refBinding?.expression || !ctx?.state) {
+    return null
+  }
+
+  const { expression } = refBinding
+
+  const runAssign = (instance) => {
+    const mergeScope = {
+      ...ctx,
+      ...scope,
+      slotScope: scope,
+      __refInstance: instance,
+      __refIndex: loopIndex
     }
 
-    if (instance) {
+    try {
       if (loopIndex !== undefined) {
-        if (!Array.isArray(refsStore[refName])) {
-          refsStore[refName] = []
-        }
-        refsStore[refName][loopIndex] = instance
+        newFn(
+          '$scope',
+          `with($scope || {}) {
+            const __target = ${expression}
+            if (Array.isArray(__target)) {
+              __target[__refIndex] = __refInstance
+            } else {
+              ${expression} = __refInstance
+            }
+          }`
+        ).call(ctx, mergeScope)
       } else {
-        refsStore[refName] = instance
+        newFn(
+          '$scope',
+          `with($scope || {}) {
+            ${expression} = __refInstance
+          }`
+        ).call(ctx, mergeScope)
       }
+    } catch (error) {
+      console.warn('[schema-renderer] ref assign failed:', expression, error)
+    }
+  }
+
+  return (instance) => {
+    if (instance) {
+      runAssign(instance)
       return
     }
 
-    // 组件卸载时移除 ref 实例
-    if (loopIndex !== undefined) {
-      removeLoopRef(refsStore, refName, loopIndex, instance)
-    } else {
-      delete refsStore[refName]
-    }
-  }
-}
-
-export const parseRefName = (ref, scope, ctx, parseDataFn) => {
-  if (ref == null || ref === '') {
-    return
-  }
-
-  if (typeof ref === 'string') {
-    const name = ref.trim()
-    return name
-  }
-
-  const parsed = parseDataFn(ref, scope, ctx)
-  if (typeof parsed === 'string') {
-    const name = parsed.trim()
-    return name
+    // 卸载时清空
+    runAssign(null)
   }
 }

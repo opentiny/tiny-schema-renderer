@@ -19,7 +19,9 @@
     "formData": {
       "userName": "",
       "password": ""
-    }
+    },
+    "formRef": null,
+    "formItemRef": []
   },
   "lifeCycles": {},
   "children": [
@@ -257,9 +259,12 @@
     },
     {
       "componentName": "TinyForm",
-      "ref": "formRef",
       "props": {
         "style": "width: 400px;",
+        "ref": {
+          "type": "JSExpression",
+          "value": "this.state.formRef"
+        },
         "model": {
           "type": "JSExpression",
           "value": "this.state.formData"
@@ -268,13 +273,16 @@
       "children": [
         {
           "componentName": "TinyFormItem",
-          "ref": "formItemRef",
           "loop": {
             "type": "JSExpression",
             "value": "this.state.formItemList"
           },
           "loopArgs": ["item"],
           "props": {
+            "ref": {
+              "type": "JSExpression",
+              "value": "this.state.formItemRef"
+            },
             "label": {
               "type": "JSExpression",
               "value": "item.label"
@@ -305,7 +313,7 @@
             "type": "primary",
             "onClick": {
               "type": "JSFunction",
-              "value": "function() { console.log(this.$refs.formItemRef); this.$refs.formRef.validate().then(res => {console.log(res)}).catch(err => {console.log(err)}) }"
+              "value": "function() { console.log(this.state.formItemRef); this.state.formRef.validate().then(res => {console.log(res)}).catch(err => {console.log(err)}) }"
             }
           }
         }

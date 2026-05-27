@@ -15,7 +15,7 @@ import { h, provide, inject } from 'vue'
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import Notify from '@opentiny/vue-notify'
 import useCustomSetting from './useCustomSetting'
-import { createRefSetter, parseRefName } from './refs'
+import { createRefSetter, resolveRefBinding } from './refs'
 import {
   CanvasRow,
   CanvasCol,
@@ -258,7 +258,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
 }
 
 function renderComponent(schema, scope, context) {
-  const { componentName, loop, loopArgs, condition, ref } = schema
+  const { componentName, loop, loopArgs, condition, props } = schema
 
   // 处理数据源和表格fetchData的映射关系
   generateCollection(schema)
@@ -288,10 +288,10 @@ function renderComponent(schema, scope, context) {
     }
 
     const bindProps = getBindProps(schema, mergeScope, context)
-    const refName = parseRefName(ref, mergeScope, context, parseData)
+    const refSetter = createRefSetter(resolveRefBinding(props?.ref), mergeScope, context, index, newFn)
 
-    if (refName && context?.$refs) {
-      bindProps.ref = createRefSetter(refName, context.$refs, index)
+    if (refSetter) {
+      bindProps.ref = refSetter
     }
 
     const Ele = h(component, bindProps, getChildren(schema, mergeScope, context))
@@ -634,6 +634,15 @@ const renderSlot = (children, scope, schema, isCustomElm) => {
 
 const directChildrenHasTemplate = (children) => children.some((child) => child.componentName === 'Template')
 
+const parsePropsData = (props, scope, context) => {
+  if (!props) {
+    return {}
+  }
+
+  const { ref, ...rest } = props
+  return parseData(rest, scope, context)
+}
+
 const getBindProps = (schema, scope, context) => {
   const { componentName } = schema
 
@@ -643,7 +652,7 @@ const getBindProps = (schema, scope, context) => {
 
   const { cssScopeId } = context
   const bindProps = {
-    ...parseData(schema.props, scope, context),
+    ...parsePropsData(schema.props, scope, context),
     'data-id': schema.id,
     'data-tag': componentName,
     [cssScopeId]: ''
