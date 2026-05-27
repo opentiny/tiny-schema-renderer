@@ -10,7 +10,7 @@
  *
  */
 
-import { h, provide, nextTick, reactive, watchEffect, inject, onErrorCaptured, onBeforeUnmount } from 'vue'
+import { h, provide, nextTick, reactive, watchEffect, inject, onErrorCaptured, onUnmounted } from 'vue'
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
@@ -131,7 +131,7 @@ export default {
       }
     }
 
-    onBeforeUnmount(async () => {
+    onUnmounted(async () => {
       await invokePageOnUnmounted()
     })
 
