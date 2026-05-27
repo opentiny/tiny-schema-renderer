@@ -6,8 +6,8 @@ export interface JSFunctionDescriptor {
 }
 
 export interface LifeCycles {
-  onMounted?: JSFunctionDescriptor
-  onUnmounted?: JSFunctionDescriptor
+  onMounted?: unknown
+  onUnmounted?: unknown
 }
 
 const normalizeLifeCycles = (lifeCycles: unknown): LifeCycles => {
@@ -17,26 +17,20 @@ const normalizeLifeCycles = (lifeCycles: unknown): LifeCycles => {
   return lifeCycles as LifeCycles
 }
 
-const parseLifeCycleFn = (
-  source: JSFunctionDescriptor | undefined,
-  getContext: () => any
-): (() => void | Promise<void>) | null => {
+const parseLifeCycleFn = (source: unknown, getContext: () => any): (() => void | Promise<void>) | null => {
+  if (source == null) {
+    return null
+  }
   try {
-    if (!source || source.type !== 'JSFunction') {
-      return null
-    }
-    const fn = parseData(source, {}, getContext())
-    return typeof fn === 'function' ? fn : null
+    const parsed = parseData(source, {}, getContext())
+    return typeof parsed === 'function' ? parsed : null
   } catch (error) {
-    console.error('RenderMain lifeCycle parse error:', error)
+    console.error('LifeCycle parse error:', error)
     return null
   }
 }
 
-export const getPageLifeCycleFns = (
-  lifeCycles: LifeCycles | null | undefined,
-  getContext: () => any
-) => {
+export const getPageLifeCycleFns = (lifeCycles: LifeCycles | null | undefined, getContext: () => any) => {
   const cycles = normalizeLifeCycles(lifeCycles)
   return {
     onMounted: parseLifeCycleFn(cycles.onMounted, getContext),
