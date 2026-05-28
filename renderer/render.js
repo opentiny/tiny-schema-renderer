@@ -32,6 +32,7 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
+import TinyPager from '@opentiny/vue-pager'
 import TinyChartPie from '@opentiny/vue-chart-pie'
 import TinyChartRadar from '@opentiny/vue-chart-radar'
 import TinyChartBar from '@opentiny/vue-chart-bar'
@@ -142,6 +143,7 @@ export const Mapper = {
   CanvasPlaceholder,
   CanvasRouterLink,
   CanvasRouterView,
+  TinyPager,
   TinyChartPie,
   TinyChartRadar,
   TinyChartBar,
@@ -275,12 +277,12 @@ function renderComponent(schema, scope, context) {
   const loopList = parseData(loop, scope, context)
 
   const renderElement = (item, index) => {
-    let mergeScope = getLoopScope({
+    let mergeScope = index !== undefined ? getLoopScope({
           item,
           index,
           loopArgs,
           scope
-        })
+        }) : scope
 
     if (!parseCondition(condition, mergeScope, context)) {
       return null
@@ -291,7 +293,7 @@ function renderComponent(schema, scope, context) {
     return Ele
   }
 
-  return loopList?.length ? loopList.map(renderElement) : renderElement()
+  return loop ? loopList?.map(renderElement) : renderElement()
 }
 
 const renderDefault = (children, scope, ctx) => {
@@ -532,6 +534,16 @@ const parseObjectData = (data, scope, ctx) => {
       scope,
       ctx
     )
+  }
+
+
+  const refValue = propsEntries.find(([key, value]) => key === 'ref' && value?.type === JS_EXPRESSION)
+
+  if (refValue) {
+    res.ref = parseData({
+      type: JS_FUNCTION,
+      value: `(instance) => ${refValue[1].value}=instance`
+    }, scope, ctx)
   }
 
   return res
