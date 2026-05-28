@@ -19,7 +19,9 @@
     "formData": {
       "userName": "",
       "password": ""
-    },
+    }
+  },
+  "refs": {
     "formRef": null,
     "formItemRef": []
   },
@@ -263,7 +265,7 @@
         "style": "width: 400px;",
         "ref": {
           "type": "JSExpression",
-          "value": "this.state.formRef"
+          "value": "this.refs.formRef"
         },
         "model": {
           "type": "JSExpression",
@@ -281,7 +283,7 @@
           "props": {
             "ref": {
               "type": "JSExpression",
-              "value": "this.state.formItemRef[loopIndex]"
+              "value": "this.refs.formItemRef[loopIndex]"
             },
             "label": {
               "type": "JSExpression",
@@ -313,7 +315,7 @@
             "type": "primary",
             "onClick": {
               "type": "JSFunction",
-              "value": "function() { console.log(this.state.formItemRef); this.state.formRef.validate().then(res => {console.log(res)}).catch(err => {console.log(err)}) }"
+              "value": "function() { console.log(this.refs.formItemRef); this.refs.formRef.validate().then(res => {console.log(res)}).catch(err => {console.log(err)}) }"
             }
           }
         }
