@@ -5,6 +5,26 @@
   "props": {
     "className": "page-base-style"
   },
+  "state": {
+    "formItemList": [
+      {
+        "label": "用户名",
+        "prop": "userName"
+      },
+      {
+        "label": "密码",
+        "prop": "password"
+      }
+    ],
+    "formData": {
+      "userName": "",
+      "password": ""
+    }
+  },
+  "refs": {
+    "formRef": null,
+    "formItemRef": []
+  },
   "lifeCycles": {},
   "children": [
     {
@@ -236,6 +256,68 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "componentName": "TinyForm",
+      "props": {
+        "style": "width: 400px;",
+        "ref": {
+          "type": "JSExpression",
+          "value": "this.refs.formRef"
+        },
+        "model": {
+          "type": "JSExpression",
+          "value": "this.state.formData"
+        }
+      },
+      "children": [
+        {
+          "componentName": "TinyFormItem",
+          "loop": {
+            "type": "JSExpression",
+            "value": "this.state.formItemList"
+          },
+          "loopArgs": ["item", "loopIndex"],
+          "props": {
+            "ref": {
+              "type": "JSExpression",
+              "value": "this.refs.formItemRef[loopIndex]"
+            },
+            "label": {
+              "type": "JSExpression",
+              "value": "item.label"
+            },
+            "prop": {
+              "type": "JSExpression",
+              "value": "item.prop"
+            },
+            "required": true
+          },
+          "children": [
+            {
+              "componentName": "TinyInput",
+              "props": {
+                "modelValue": {
+                  "type": "JSExpression",
+                  "model": true,
+                  "value": "this.state.formData[item.prop]"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "componentName": "TinyButton",
+          "props": {
+            "text": "提交",
+            "type": "primary",
+            "onClick": {
+              "type": "JSFunction",
+              "value": "function() { console.log(this.refs.formItemRef); this.refs.formRef.validate().then(res => {console.log(res)}).catch(err => {console.log(err)}) }"
+            }
+          }
         }
       ]
     },
@@ -494,7 +576,6 @@
   "bridge": {
     "imports": []
   },
-  "state": {},
   "inputs": [],
   "outputs": [],
   "id": "body"

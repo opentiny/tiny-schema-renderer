@@ -32,6 +32,7 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
+import TinyPager from '@opentiny/vue-pager'
 import TinyChartPie from '@opentiny/vue-chart-pie'
 import TinyChartRadar from '@opentiny/vue-chart-radar'
 import TinyChartBar from '@opentiny/vue-chart-bar'
@@ -142,6 +143,7 @@ export const Mapper = {
   CanvasPlaceholder,
   CanvasRouterLink,
   CanvasRouterView,
+  TinyPager,
   TinyChartPie,
   TinyChartRadar,
   TinyChartBar,
@@ -532,6 +534,16 @@ const parseObjectData = (data, scope, ctx) => {
       scope,
       ctx
     )
+  }
+
+
+  const refValue = propsEntries.find(([key, value]) => key === 'ref' && value?.type === JS_EXPRESSION)
+
+  if (refValue) {
+    res.ref = parseData({
+      type: JS_FUNCTION,
+      value: `(instance) => ${refValue[1].value}=instance`
+    }, scope, ctx)
   }
 
   return res

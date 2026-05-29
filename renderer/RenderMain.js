@@ -57,6 +57,7 @@ export default {
     const pageSchema = reactive({})
     const methods = {}
     const state = reactive({})
+    const refs = shallowReactive({})
     let pageOnUnmounted = null
 
     const invokePageOnUnmounted = async () => {
@@ -95,6 +96,15 @@ export default {
       Object.assign(state, parseData(data, {}, getContext()) || {})
     }
 
+    const setRefs = (data, clear) => {
+      clear && reset(refs)
+      if (!pageSchema.refs) {
+        pageSchema.refs = data
+      }
+
+      Object.assign(refs, parseData(data, {}, getContext()) || {})
+    }
+
     const setSchema = async (data) => {
       if (!data || !Object.keys(data).length) {
         return
@@ -102,6 +112,7 @@ export default {
       const newSchema = JSON.parse(JSON.stringify(data))
       const context = {
         state,
+        refs,
         cssScopeId
       }
       // 此处提升很重要，因为setState、initProps也会触发画布重新渲染，所以需要提升上下文环境的设置时间
@@ -112,6 +123,7 @@ export default {
 
       // 这里setState（会触发画布渲染），是因为状态管理里面的变量会用到props、utils、bridge、stores、methods
       setState(newSchema.state, true)
+      setRefs(newSchema.refs, true)
 
       await invokePageOnUnmounted()
       const { onMounted: onMountedFn, onUnmounted: onUnmountedFn } = getPageLifeCycleFns(
@@ -151,9 +163,11 @@ export default {
       setContext,
       getContext,
       setState,
+      setRefs,
       pageSchema,
       methods,
-      state
+      state,
+      refs
     }
   },
   render() {
