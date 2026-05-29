@@ -10,7 +10,7 @@
  *
  */
 
-import { h, provide, nextTick, reactive, watchEffect, inject, onErrorCaptured, onUnmounted } from 'vue'
+import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured, onUnmounted } from 'vue'
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
