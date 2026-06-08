@@ -1,4 +1,4 @@
-import { shallowReactive } from 'vue'
+import { reactive } from 'vue'
 import { parseData } from './render'
 import { getDeletedKeys, reset } from './dataUtils'
 import type { GetContext } from './types'
@@ -14,7 +14,7 @@ interface UseStateOptions {
  * @param options - 配置项
  */
 export function useState({ getContext, registerStateAccessors }: UseStateOptions) {
-  const state = shallowReactive<Record<string, unknown>>({})
+  const state = reactive<Record<string, unknown>>({})
 
   /**
    * 将 schema.state 同步到运行时 state，并注册 accessor。
