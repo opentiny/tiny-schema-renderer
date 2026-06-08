@@ -18,14 +18,6 @@ export interface StateAccessorConfig {
 }
 
 /**
- * 渲染器自定义配置，通过 provide(RENDERER_SETTINGS_KEY) 注入。
- */
-export interface RendererSettings {
-  Function?: FunctionConstructor
-  transformJSX?: (code: string) => string
-}
-
-/**
  * 页面运行时上下文。
  */
 export type PageContext = Record<string, unknown>
