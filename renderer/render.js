@@ -14,7 +14,7 @@ import { h, provide, inject } from 'vue'
 
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import Notify from '@opentiny/vue-notify'
-import useCustomSetting from './useCustomSetting'
+import useCustomSetting, { DEFAULT_RENDERER_SETTINGS } from './useCustomSetting'
 import {
   CanvasRow,
   CanvasCol,
@@ -32,38 +32,6 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
-import TinyPager from '@opentiny/vue-pager'
-import TinyChartPie from '@opentiny/vue-chart-pie'
-import TinyChartRadar from '@opentiny/vue-chart-radar'
-import TinyChartBar from '@opentiny/vue-chart-bar'
-import TinyChartHistogram from '@opentiny/vue-chart-histogram'
-import TinyChartLine from '@opentiny/vue-chart-line'
-import TinyChartRing from '@opentiny/vue-chart-ring'
-import TinyButton from '@opentiny/vue-button'
-import TinyCarousel from '@opentiny/vue-carousel'
-import TinyCarouselItem from '@opentiny/vue-carousel-item'
-import TinyCol from '@opentiny/vue-col'
-import TinyDatePicker from '@opentiny/vue-date-picker'
-import TinyGrid from '@opentiny/vue-grid'
-import TinyForm from '@opentiny/vue-form'
-import TinyFormItem from '@opentiny/vue-form-item'
-import TinyInput from '@opentiny/vue-input'
-import TinyLayout from '@opentiny/vue-layout'
-import TinyRow from '@opentiny/vue-row'
-import TinySelect from '@opentiny/vue-select'
-import TinySearch from '@opentiny/vue-search'
-import TinyCard from '@opentiny/vue-card'
-import TinyCheckbox from '@opentiny/vue-checkbox'
-import TinyCheckboxButton from '@opentiny/vue-checkbox-button'
-import TinyCheckboxGroup from '@opentiny/vue-checkbox-group'
-import TinyNumeric from '@opentiny/vue-numeric'
-import TinyRadio from '@opentiny/vue-radio'
-import TinySwitch from '@opentiny/vue-switch'
-import TinyTabs from '@opentiny/vue-tabs'
-import TinyTabItem from '@opentiny/vue-tab-item'
-import TinyTree from '@opentiny/vue-tree'
-import TinyTransfer from '@opentiny/vue-transfer'
-import TinyRadioGroup from '@opentiny/vue-radio-group'
 
 const { getCustomSettings } = useCustomSetting()
 
@@ -106,14 +74,13 @@ const isFunctionConstructor = (fn) => {
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
-  let Fn = Function
-  const customSettings = getCustomSettings()
+  const Fn = getCustomSettings().Function ?? DEFAULT_RENDERER_SETTINGS.Function
 
-  if (customSettings.Function && isFunctionConstructor(customSettings.Function)) {
-    Fn = customSettings.Function
+  if (Fn && isFunctionConstructor(Fn)) {
+    return new Fn(...argv)
   }
 
-  return new Fn(...argv)
+  return new DEFAULT_RENDERER_SETTINGS.Function(...argv)
 }
 
 const transformJSX = (code) => {
@@ -142,39 +109,7 @@ export const Mapper = {
   CanvasSection,
   CanvasPlaceholder,
   CanvasRouterLink,
-  CanvasRouterView,
-  TinyPager,
-  TinyChartPie,
-  TinyChartRadar,
-  TinyChartBar,
-  TinyChartHistogram,
-  TinyChartLine,
-  TinyChartRing,
-  TinyButton,
-  TinyCarousel,
-  TinyCarouselItem,
-  TinyCol,
-  TinyDatePicker,
-  TinyGrid,
-  TinyForm, 
-  TinyFormItem,
-  TinyInput, 
-  TinyLayout,
-  TinyRow,
-  TinySelect, 
-  TinySearch,
-  TinyCard, 
-  TinyCheckbox, 
-  TinyCheckboxButton,
-  TinyCheckboxGroup,
-  TinyNumeric, 
-  TinyRadio, 
-  TinySwitch, 
-  TinyTabs,
-  TinyTabItem,
-  TinyTree, 
-  TinyTransfer,
-  TinyRadioGroup,
+  CanvasRouterView
 }
 
 export const collectionMethodsMap = {}
@@ -410,8 +345,14 @@ const generateCollection = (schema) => {
   }
 }
 
+const getMaterial = (name) => {
+  const materials = getCustomSettings().materials || DEFAULT_RENDERER_SETTINGS.materials
+
+  return materials?.[name]
+}
+
 export const getComponent = (name) => {
-  return Mapper[name] || customElements[name] || (isHTMLTag(name) ? name : null)
+  return Mapper[name] || getMaterial(name) || customElements[name] || (isHTMLTag(name) ? name : null)
 }
 
 // 解析JSX字符串为可执行函数
