@@ -644,10 +644,6 @@ const getBindProps = (schema, scope, context) => {
   if (componentName === 'CanvasPlaceholder') {
     return {}
   }
-  const applyDefaultProps = getCustomSettings()?.applyDefaultProps
-  if (typeof applyDefaultProps === 'function') {
-    applyDefaultProps(schema)
-  }
 
   const { cssScopeId } = context
   const bindProps = {
