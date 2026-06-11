@@ -1,8 +1,10 @@
 import type { Component } from 'vue'
+import type { DefaultPropsMap } from './applyDefaultProps'
 
 export interface IRendererSettings {
   Function?: FunctionConstructor
   materials?: Record<string, Component>
+  defaultPropsMap?: DefaultPropsMap
 }
 
 const defaultMaterials: Record<string, Component> = {}

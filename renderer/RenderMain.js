@@ -18,7 +18,6 @@ import useContext from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
-import { applyDefaultPropsToSchema } from './applyDefaultProps'
 import { getPageLifeCycleFns } from './lifeCycles'
 
 export default {
@@ -111,7 +110,6 @@ export default {
         return
       }
       const newSchema = JSON.parse(JSON.stringify(data))
-      applyDefaultPropsToSchema(newSchema, customSettings?.defaultPropsMap)
       const context = {
         state,
         refs,

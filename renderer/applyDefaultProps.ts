@@ -56,17 +56,18 @@ const fillMissingValue = (
 }
 
 /**
- * 对单个 schema 节点应用组件级默认值。
+ * 为指定组件的 props 对象补齐缺失的默认属性值。
  *
- * @param node - schema 节点
+ * @param componentName - 组件名
+ * @param props - 绑定到组件的 props 对象
  * @param defaultPropsMap - 默认值映射表，key 为组件名
  */
-const applyDefaultsToNode = (
-  node: Record<string, any>,
-  defaultPropsMap: DefaultPropsMap,
+export const applyDefaultPropsToProps = (
+  componentName: string,
+  props: Record<string, any>,
+  defaultPropsMap: DefaultPropsMap | null | undefined,
 ): void => {
-  const componentName = node.componentName
-  if (typeof componentName !== 'string') {
+  if (typeof componentName !== 'string' || !isObjectRecord(defaultPropsMap)) {
     return
   }
 
@@ -75,57 +76,7 @@ const applyDefaultsToNode = (
     return
   }
 
-  if (!isObjectRecord(node.props)) {
-    node.props = {}
-  }
-
   Object.entries(componentDefaults).forEach(([propertyPath, defaultValue]) => {
-    fillMissingValue(node.props, propertyPath, defaultValue)
+    fillMissingValue(props, propertyPath, defaultValue)
   })
-}
-
-/**
- * 递归遍历 schema 树，为所有组件节点补齐缺失的默认 props。
- *
- * @param value - 当前遍历值
- * @param defaultPropsMap - 默认值映射表
- */
-const visitPossibleNode = (
-  value: unknown,
-  defaultPropsMap: DefaultPropsMap,
-): void => {
-  if (Array.isArray(value)) {
-    value.forEach((item) => visitPossibleNode(item, defaultPropsMap))
-    return
-  }
-
-  if (!isObjectRecord(value)) {
-    return
-  }
-
-  if (typeof value.componentName === 'string') {
-    applyDefaultsToNode(value, defaultPropsMap)
-    visitPossibleNode(value.children, defaultPropsMap)
-    visitPossibleNode(value.slot, defaultPropsMap)
-    return
-  }
-
-  Object.values(value).forEach((item) => visitPossibleNode(item, defaultPropsMap))
-}
-
-/**
- * 在 schema 初始化阶段一次性应用默认值映射，仅填充缺失字段，不覆盖已有 props。
- *
- * @param schema - 页面或卡片 schema
- * @param defaultPropsMap - 用户传入的默认值映射，key 为组件名
- */
-export const applyDefaultPropsToSchema = (
-  schema: Record<string, any>,
-  defaultPropsMap: DefaultPropsMap | null | undefined,
-): void => {
-  if (!isObjectRecord(schema) || !isObjectRecord(defaultPropsMap)) {
-    return
-  }
-
-  visitPossibleNode(schema, defaultPropsMap)
 }
