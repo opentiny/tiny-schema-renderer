@@ -15,6 +15,7 @@ import { h, provide, inject } from 'vue'
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import Notify from '@opentiny/vue-notify'
 import useCustomSetting, { DEFAULT_RENDERER_SETTINGS } from './useCustomSetting'
+import { applyDefaultPropsToProps } from './applyDefaultProps'
 import {
   CanvasRow,
   CanvasCol,
@@ -601,6 +602,8 @@ const getBindProps = (schema, scope, context) => {
   // 绑定组件属性时需要将 className 重命名为 class，防止覆盖组件内置 class
   bindProps.class = bindProps.className
   delete bindProps.className
+
+  applyDefaultPropsToProps(componentName, bindProps, getCustomSettings()?.defaultPropsMap)
 
   return bindProps
 }
