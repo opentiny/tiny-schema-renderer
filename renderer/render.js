@@ -14,7 +14,7 @@ import { h, provide, inject } from 'vue'
 
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import Notify from '@opentiny/vue-notify'
-import useCustomSetting, { DEFAULT_RENDERER_SETTINGS } from './useCustomSetting'
+import { RENDERER_SETTINGS, DEFAULT_RENDERER_SETTINGS } from './renderer-settings'
 import { applyDefaultPropsToProps } from './applyDefaultProps'
 import {
   CanvasRow,
@@ -33,8 +33,6 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
-
-const { getCustomSettings } = useCustomSetting()
 
 const hyphenateRE = /\B([A-Z])/g
 export const customElements = {}
@@ -75,7 +73,7 @@ const isFunctionConstructor = (fn) => {
 
 // 规避创建function eslint报错
 export const newFn = (...argv) => {
-  const Fn = getCustomSettings().Function ?? DEFAULT_RENDERER_SETTINGS.Function
+  const Fn = inject(RENDERER_SETTINGS)?.Function ?? DEFAULT_RENDERER_SETTINGS.Function
 
   if (Fn && isFunctionConstructor(Fn)) {
     return new Fn(...argv)
@@ -85,7 +83,7 @@ export const newFn = (...argv) => {
 }
 
 const transformJSX = (code) => {
-  const customSettings = getCustomSettings()
+  const customSettings = inject(RENDERER_SETTINGS)
 
   if (customSettings.transformJSX) {
     return customSettings.transformJSX(code)
@@ -347,7 +345,7 @@ const generateCollection = (schema) => {
 }
 
 const getMaterial = (name) => {
-  const materials = getCustomSettings().materials || DEFAULT_RENDERER_SETTINGS.materials
+  const materials = inject(RENDERER_SETTINGS)?.materials || DEFAULT_RENDERER_SETTINGS.materials
 
   return materials?.[name]
 }
@@ -603,7 +601,7 @@ const getBindProps = (schema, scope, context) => {
   bindProps.class = bindProps.className
   delete bindProps.className
 
-  applyDefaultPropsToProps(componentName, bindProps, getCustomSettings()?.defaultPropsMap)
+  applyDefaultPropsToProps(componentName, bindProps, inject(RENDERER_SETTINGS)?.defaultPropsMap)
 
   return bindProps
 }
