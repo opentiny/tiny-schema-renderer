@@ -1,73 +1,104 @@
-type DefaultValueMap = Record<string, any>
+export type PropsValue = any
+export type DefaultValue = any
+
+type DefaultValueMap = Record<string, PropsValue>
 
 export type DefaultPropsMap = Record<string, DefaultValueMap>
 
-const isObjectRecord = (value: unknown): value is Record<string, any> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
+type Container = Record<string, PropsValue> | PropsValue[]
 
-/**
- * 深拷贝默认值，避免后续 schema 变更污染注册表中的原始值。
- *
- * @param value - 待拷贝的默认值
- * @returns 拷贝后的值
- */
-const cloneDefaultValue = (value: any): any => {
-  if (!isObjectRecord(value) && !Array.isArray(value)) {
+function isContainer(value: PropsValue): value is Container {
+  return typeof value === 'object' && value !== null
+}
+
+function cloneDefaultValue(value: PropsValue): PropsValue {
+  if (!isContainer(value)) {
     return value
   }
   return JSON.parse(JSON.stringify(value))
 }
 
-/**
- * 在目标 props 对象上按点分路径填充缺失的默认值。
- * 仅当叶子属性为 null 或 undefined 时写入，不覆盖已有值。
- *
- * @param target - 节点 props 对象
- * @param propertyPath - 点分属性路径，如 "options.0.label"
- * @param defaultValue - 默认值
- */
-const fillMissingValue = (
-  target: Record<string, any>,
-  propertyPath: string,
-  defaultValue: any,
-): void => {
-  const keys = propertyPath.split('.')
-  let current: Record<string, any> = target
-
-  for (const key of keys.slice(0, -1)) {
-    const nextValue = current[key]
-    if (nextValue == null) {
-      current[key] = {}
-      current = current[key]
-      continue
-    }
-
-    if (!isObjectRecord(nextValue)) {
-      return
-    }
-
-    current = nextValue
+function getChild(container: Container, key: string): PropsValue {
+  if (Array.isArray(container) && /^\d+$/.test(key)) {
+    return container[Number(key)]
   }
+  return (container as Record<string, PropsValue>)[key]
+}
 
-  const leafKey = keys[keys.length - 1]
-  if (current[leafKey] == null) {
-    current[leafKey] = cloneDefaultValue(defaultValue)
+function setChild(container: Container, key: string, value: PropsValue): void {
+  if (Array.isArray(container) && /^\d+$/.test(key)) {
+    container[Number(key)] = value
+  } else {
+    (container as Record<string, PropsValue>)[key] = value
   }
 }
 
-/**
- * 为指定组件的 props 对象补齐缺失的默认属性值。
- *
- * @param componentName - 组件名
- * @param props - 绑定到组件的 props 对象
- * @param defaultPropsMap - 默认值映射表，key 为组件名
- */
-export const applyDefaultPropsToProps = (
+function fillAtPath(
+  current: Container,
+  keys: string[],
+  defaultValue: DefaultValue,
+): void {
+  if (!keys.length) {
+    return
+  }
+
+  const [key, ...rest] = keys
+
+  if (key === '*' && Array.isArray(current)) {
+    for (let i = 0; i < current.length; i++) {
+      if (!rest.length) {
+        if (current[i] == null) {
+          current[i] = cloneDefaultValue(defaultValue)
+        }
+        continue
+      }
+      const item = current[i]
+      if (item == null || !isContainer(item)) {
+        continue
+      }
+      fillAtPath(item, rest, defaultValue)
+    }
+    return
+  }
+
+  if (!rest.length) {
+    if (getChild(current, key) == null) {
+      setChild(current, key, cloneDefaultValue(defaultValue))
+    }
+    return
+  }
+
+  const nextValue = getChild(current, key)
+  if (nextValue == null) {
+    return
+  }
+
+  if (rest[0] === '*' && Array.isArray(nextValue)) {
+    fillAtPath(nextValue, rest, defaultValue)
+    return
+  }
+
+  if (!isContainer(nextValue)) {
+    return
+  }
+
+  fillAtPath(nextValue, rest, defaultValue)
+}
+
+function fillMissingValue(
+  target: Record<string, PropsValue>,
+  propertyPath: string,
+  defaultValue: DefaultValue,
+): void {
+  fillAtPath(target, propertyPath.split('.'), defaultValue)
+}
+
+export function applyDefaultPropsToProps(
   componentName: string,
-  props: Record<string, any>,
+  props: Record<string, PropsValue>,
   defaultPropsMap: DefaultPropsMap | null | undefined,
-): void => {
-  if (typeof componentName !== 'string' || !isObjectRecord(defaultPropsMap)) {
+): void {
+  if (typeof componentName !== 'string' || !isContainer(defaultPropsMap)) {
     return
   }
 
