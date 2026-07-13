@@ -10,11 +10,11 @@
  *
  */
 
-import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured, onUnmounted } from 'vue'
+import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured, onUnmounted, watch } from 'vue'
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
-import useContext from './useContext'
+import useContext, { MATERIALS } from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
@@ -45,7 +45,12 @@ export default {
     const customSettings = inject(RENDERER_SETTINGS_KEY, null)
     if (customSettings) {
       setCustomSettings(customSettings)
+      context[MATERIALS] = customSettings.materials ?? {}
     }
+
+    watch(() => customSettings.materials, (newVal) => {
+      context[MATERIALS] = newVal ?? {}
+    })
 
     const customContext = inject('customContext', null)
     if (customContext) {

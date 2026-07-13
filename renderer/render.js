@@ -15,6 +15,7 @@ import { h, provide, inject } from 'vue'
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import Notify from '@opentiny/vue-notify'
 import useCustomSetting, { DEFAULT_RENDERER_SETTINGS } from './useCustomSetting'
+import { MATERIALS } from './useContext'
 import { applyDefaultPropsToProps } from './applyDefaultProps'
 import {
   CanvasRow,
@@ -204,7 +205,7 @@ function renderComponent(schema, scope, context) {
     return null
   }
 
-  const component = getComponent(componentName)
+  const component = getComponent(componentName, context)
 
   if (!component) {
     return null
@@ -346,14 +347,8 @@ const generateCollection = (schema) => {
   }
 }
 
-const getMaterial = (name) => {
-  const materials = getCustomSettings().materials || DEFAULT_RENDERER_SETTINGS.materials
-
-  return materials?.[name]
-}
-
-export const getComponent = (name) => {
-  return Mapper[name] || getMaterial(name) || customElements[name] || (isHTMLTag(name) ? name : null)
+export const getComponent = (name, context) => {
+  return Mapper[name] || context[MATERIALS]?.components?.[name] || customElements[name] || (isHTMLTag(name) ? name : null)
 }
 
 // 解析JSX字符串为可执行函数
@@ -365,7 +360,7 @@ const parseJSXFunction = (data, ctx) => {
 
     return newFn(...fnInfo.params, fnInfo.body).bind({
       ...ctx,
-      getComponent
+      getComponent: (name) => getComponent(name, ctx)
     })
   } catch (error) {
     Notify({
@@ -602,8 +597,8 @@ const getBindProps = (schema, scope, context) => {
   // 绑定组件属性时需要将 className 重命名为 class，防止覆盖组件内置 class
   bindProps.class = bindProps.className
   delete bindProps.className
-
-  applyDefaultPropsToProps(componentName, bindProps, getCustomSettings()?.defaultPropsMap)
+  const defaultPropsMap = context[MATERIALS]?.defaultPropsMap || {}
+  applyDefaultPropsToProps(componentName, bindProps, defaultPropsMap)
 
   return bindProps
 }
