@@ -1,5 +1,7 @@
 import { shallowReactive } from "vue";
 
+export const MATERIALS = Symbol('MATERIALS_MAP');
+
 export default () => {
   const context = shallowReactive({});
   const oldSchema = {
