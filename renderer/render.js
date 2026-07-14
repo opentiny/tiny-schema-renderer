@@ -215,11 +215,11 @@ function renderComponent(schema, scope, context) {
 
   const renderElement = (item, index) => {
     let mergeScope = index !== undefined ? getLoopScope({
-          item,
-          index,
-          loopArgs,
-          scope
-        }) : scope
+      item,
+      index,
+      loopArgs,
+      scope
+    }) : scope
 
     if (!parseCondition(condition, mergeScope, context)) {
       return null
@@ -633,7 +633,8 @@ const getChildren = (schema, mergeScope, context) => {
   const renderChildren = injectPlaceHolder(componentName, children)
 
   if (!Array.isArray(renderChildren)) {
-    return parseData(renderChildren, mergeScope, context)
+    const content = parseData(renderChildren, mergeScope, context)
+    return { default: () => content }
   }
 
   if (!renderChildren.length) {
