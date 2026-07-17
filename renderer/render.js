@@ -13,7 +13,7 @@
 import { h, provide, inject } from 'vue'
 
 import { isHTMLTag, hyphenate } from '@vue/shared'
-import Notify from '@opentiny/vue-notify'
+import { Notify } from './notify'
 import useCustomSetting, { DEFAULT_RENDERER_SETTINGS } from './useCustomSetting'
 import { MATERIALS } from './useContext'
 import { applyDefaultPropsToProps } from './applyDefaultProps'
