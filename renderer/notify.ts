@@ -1,4 +1,4 @@
-import { getCustomSettings } from './useCustomSetting'
+import { NOTIFY } from './useContext'
 
 export type NotifyType = 'success' | 'warning' | 'error' | 'info'
 
@@ -10,6 +10,8 @@ export interface NotifyOptions {
 }
 
 export type NotifyHandler = (options: NotifyOptions) => void
+
+export { NOTIFY }
 
 const ROOT_ID = 'genui-notify-root'
 const STYLE_ID = 'genui-notify-style'
@@ -116,9 +118,9 @@ function showDomToast(options: NotifyOptions): void {
   bindAutoDismiss(el, options.duration ?? DEFAULT_DURATION, closeBtn)
 }
 
-export function Notify(options: NotifyOptions): void {
+export function Notify(options: NotifyOptions, ctx?: Record<PropertyKey, any>): void {
   try {
-    const custom = getCustomSettings().notify
+    const custom = ctx?.[NOTIFY] as NotifyHandler | undefined
     if (custom) {
       custom(options)
       return

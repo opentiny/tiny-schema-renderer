@@ -14,7 +14,7 @@ import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, o
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
-import useContext, { MATERIALS } from './useContext'
+import useContext, { MATERIALS, NOTIFY } from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
@@ -46,10 +46,15 @@ export default {
     if (customSettings) {
       setCustomSettings(customSettings)
       context[MATERIALS] = customSettings.materials ?? {}
+      context[NOTIFY] = customSettings.notify
     }
 
-    watch(() => customSettings.materials, (newVal) => {
+    watch(() => customSettings?.materials, (newVal) => {
       context[MATERIALS] = newVal ?? {}
+    })
+
+    watch(() => customSettings?.notify, (newVal) => {
+      context[NOTIFY] = newVal
     })
 
     const customContext = inject('customContext', null)
