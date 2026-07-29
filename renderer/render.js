@@ -267,7 +267,7 @@ export const generateFn = (innerFn, context) => {
       }
 
       // 这里注意如果innerFn返回的是一个promise则需要捕获异常，重新返回默认一条空数据
-      if (result?.then) {
+      if (typeof result?.then === 'function') {
         result = new Promise((resolve) => {
           result.then(resolve).catch((error) => {
             Notify({

@@ -14,25 +14,26 @@ export type NotifyHandler = (options: NotifyOptions) => void
 export { NOTIFY }
 
 const ROOT_ID = 'genui-notify-root'
-const STYLE_ID = 'genui-notify-style-v3'
+const STYLE_ID = 'genui-notify-style'
 const DEFAULT_DURATION = 4500
 const ANIM_MS = 300
 
+// 配色 / 图标对齐 TinyVue Notify：https://opentiny.design/tiny-vue/zh-CN/os-theme/components/notify
 const TYPE_COLOR: Record<NotifyType, string> = {
-  success: '#67c23a',
-  warning: '#e6a23c',
-  error: '#f56c6c',
-  info: '#909399',
+  success: '#5cb300',
+  warning: '#ff8800',
+  error: '#f23030',
+  info: '#1476ff',
 }
 
 const TYPE_ICON: Record<NotifyType, string> = {
   success:
-    '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7.5 12.5l3 3 6-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    '<svg viewBox="0 0 16 16" width="24" height="24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.14 7-7-3.14-7-7-7Z"/><path fill="#fff" fill-rule="evenodd" d="M10.38 5.97c.18-.16.46-.16.63 0a.5.5 0 0 1 0 .65L7.73 9.9c-.18.17-.4.26-.63.26s-.46-.09-.65-.26L4.97 8.42a.487.487 0 0 1 0-.64c.18-.16.46-.16.64 0l1.48 1.48 3.28-3.28Z"/></svg>',
   warning:
-    '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 7v6" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1.2" fill="#fff"/></svg>',
+    '<svg viewBox="0 0 16 16" width="24" height="24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="m8.84 1.5 6.04 11.13c.25.45.07 1.02-.39 1.26-.14.08-.29.12-.45.12H1.95c-.53 0-.95-.42-.95-.94 0-.16.03-.31.11-.44L7.15 1.5c.25-.46.83-.63 1.29-.38.17.08.31.22.4.38Z"/><path fill="#fff" fill-rule="evenodd" d="M8 12.01a.749.749 0 1 1 0-1.5c.42 0 .75.33.75.75s-.34.75-.75.75Zm0-7c.28 0 .5.22.5.5v3.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5v-3.5c0-.28.22-.5.5-.5Z"/></svg>',
   error:
-    '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>',
-  info: '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 10.5V17" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.2" fill="#fff"/></svg>',
+    '<svg viewBox="0 0 16 16" width="24" height="24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.14 7-7-3.14-7-7-7Z"/><path fill="#fff" fill-rule="evenodd" d="M10.62 4.9c.13 0 .24.05.34.14.09.09.14.2.14.34s-.05.24-.14.34L8.67 8.01l2.29 2.29c.09.09.14.2.14.34a.476.476 0 0 1-.48.48c-.14 0-.24-.05-.34-.14L7.99 8.69 5.7 10.98c-.09.09-.2.14-.34.14a.476.476 0 0 1-.48-.48c0-.14.05-.24.14-.34l2.29-2.29-2.29-2.29c-.09-.09-.14-.2-.14-.34a.476.476 0 0 1 .48-.48c.14 0 .24.05.34.14l2.29 2.29 2.29-2.29c.09-.09.2-.14.34-.14Z"/></svg>',
+  info: '<svg viewBox="0 0 14 14" width="24" height="24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7 0C3.13 0 0 3.13 0 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7z"/><path fill="#fff" fill-rule="evenodd" d="M7.57 6.43v4a.57.57 0 1 1-1.14 0v-4a.57.57 0 1 1 1.14 0zM7 3c-.47 0-.86.38-.86.86s.39.85.86.85.86-.38.86-.86S7.47 3 7 3z"/></svg>',
 }
 
 function fallback(options: NotifyOptions): void {
@@ -40,7 +41,6 @@ function fallback(options: NotifyOptions): void {
 }
 
 function ensureStyle(): void {
-  document.getElementById('genui-notify-style-v2')?.remove()
   if (document.getElementById(STYLE_ID)) return
   const style = document.createElement('style')
   style.id = STYLE_ID
@@ -153,7 +153,7 @@ function showDomToast(options: NotifyOptions): void {
 export function Notify(options: NotifyOptions, ctx?: Record<PropertyKey, any>): void {
   try {
     const custom = ctx?.[NOTIFY] as NotifyHandler | undefined
-    if (custom) {
+    if (typeof custom === 'function') {
       custom(options)
       return
     }
