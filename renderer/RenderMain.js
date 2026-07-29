@@ -39,14 +39,15 @@ export default {
       Object.keys(obj).forEach((key) => delete obj[key])
     }
 
-    // 设置 customSettings，如 Function
+    // 仅将进程级配置写入单例（如 Function）；notify / materials 走实例 context
     const { setCustomSettings } = useCustomSetting()
 
     const customSettings = inject(RENDERER_SETTINGS_KEY, null)
     if (customSettings) {
-      setCustomSettings(customSettings)
-      context[MATERIALS] = customSettings.materials ?? {}
-      context[NOTIFY] = customSettings.notify
+      const { notify, materials, ...globalSettings } = customSettings
+      setCustomSettings(globalSettings)
+      context[MATERIALS] = materials ?? {}
+      context[NOTIFY] = notify
     }
 
     watch(() => customSettings?.materials, (newVal) => {
