@@ -44,18 +44,15 @@ export default {
 
     const customSettings = inject(RENDERER_SETTINGS_KEY, null)
     if (customSettings) {
-      const { notify, materials, ...globalSettings } = customSettings
+      const { materials, ...globalSettings } = customSettings
+      delete globalSettings.notify
       setCustomSettings(globalSettings)
       context[MATERIALS] = materials ?? {}
-      context[NOTIFY] = notify
+      context[NOTIFY] = customSettings
     }
 
     watch(() => customSettings?.materials, (newVal) => {
       context[MATERIALS] = newVal ?? {}
-    })
-
-    watch(() => customSettings?.notify, (newVal) => {
-      context[NOTIFY] = newVal
     })
 
     const customContext = inject('customContext', null)

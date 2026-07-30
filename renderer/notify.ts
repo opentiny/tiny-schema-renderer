@@ -152,7 +152,8 @@ function showDomToast(options: NotifyOptions): void {
 
 export function Notify(options: NotifyOptions, ctx?: Record<PropertyKey, any>): void {
   try {
-    const custom = ctx?.[NOTIFY] as NotifyHandler | undefined
+    const settings = ctx?.[NOTIFY] as { notify?: NotifyHandler } | undefined
+    const custom = settings?.notify
     if (typeof custom === 'function') {
       custom(options)
       return
