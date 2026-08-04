@@ -26,7 +26,6 @@ import {
 } from '@opentiny/tiny-engine-builtin-component'
 import {
   CanvasBox,
-  CanvasIcon,
   CanvasText,
   CanvasSlot,
   CanvasImg,
@@ -97,7 +96,6 @@ const transformJSX = (code) => {
 }
 
 export const Mapper = {
-  Icon: CanvasIcon,
   Text: CanvasText,
   div: CanvasBox,
   Slot: CanvasSlot,
@@ -431,8 +429,6 @@ const parseLoopArgs = (_loop) => {
   return undefined
 }
 
-export const getIcon = (name) => window.TinyVueIcon?.[name]?.() || ''
-
 const parseObjectData = (data, scope, ctx) => {
   if (!data) {
     return data
@@ -443,10 +439,6 @@ const parseObjectData = (data, scope, ctx) => {
     return parseData(data.defaultValue, scope, ctx)
   }
 
-  // 解析通过属性传递icon图标组件
-  if (data.componentName === 'Icon') {
-    return getIcon(data.props.name)
-  }
   const res = {}
   Object.entries(data).forEach(([key, value]) => {
     // 如果是插槽则需要进行特殊处理
