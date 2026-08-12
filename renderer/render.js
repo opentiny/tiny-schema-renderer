@@ -88,7 +88,7 @@ const transformJSX = (code) => {
   const customSettings = getCustomSettings()
 
   if (customSettings.transformJSX) {
-    return customSettings.transformJSX(code)
+    return customSettings.transformJSX(code, customElements)
   } else {
     console.warn('当前不支持JSX解析，如需支持，请配置customSettings.transformJSX')
     return code
@@ -167,7 +167,6 @@ export const isStateAccessor = (stateData) =>
 const parseExpression = (data, scope, ctx, isJsx = false) => {
   try {
     const mergeScope = {
-      ...ctx,
       ...scope,
       slotScope: scope
     }
@@ -187,7 +186,11 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
   } catch (err) {
     // 解析抛出异常，则再尝试解析 JSX 语法。如果解析 JSX 语法仍然出现错误，isJsx 变量会确保不会再次递归执行解析
     if (!isJsx) {
-      return parseExpression(data, scope, ctx, true)
+      return parseExpression(data, {
+        getComponent: (name) => getComponent(name, ctx),
+        h,
+        ...scope,
+      }, ctx, true)
     }
     return undefined
   }
@@ -350,16 +353,25 @@ export const getComponent = (name, context) => {
 }
 
 // 解析JSX字符串为可执行函数
-const parseJSXFunction = (data, ctx) => {
+const parseJSXFunction = (data, scope, ctx) => {
   try {
     const newValue = transformJSX(data.value)
     const fnInfo = parseFunctionString(newValue)
     if (!fnInfo) throw Error('函数解析失败，请检查格式。示例：function fnName() { }')
 
-    return newFn(...fnInfo.params, fnInfo.body).bind({
-      ...ctx,
-      getComponent: (name) => getComponent(name, ctx)
-    })
+    return parseExpression(
+      {
+        type: JS_EXPRESSION,
+        value: data.value
+      },
+      {
+        h,
+        getComponent: (name) => getComponent(name, ctx),
+        ...scope,
+      },
+      ctx,
+      true
+    )
   } catch (error) {
     Notify({
       type: 'warning',
@@ -393,8 +405,7 @@ const parseJSFunction = (data, scope, ctx) => {
     const innerFn = newFn(`return ${data.value}`).bind(ctx)()
     return generateFn(innerFn, ctx)
   } catch (error) {
-    console.error(error)
-    return parseJSXFunction(data, ctx)
+    return parseJSXFunction(data, scope, ctx)
   }
 }
 

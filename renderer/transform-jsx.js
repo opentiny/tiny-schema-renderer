@@ -1,7 +1,7 @@
 import babelPluginJSX from '@vue/babel-plugin-jsx'
 import { transform } from '@babel/standalone'
 
-export const transformJSX = (code) => {
+export const transformJSX = (code, customElements) => {
   const res = transform(code, {
     plugins: [
       [
@@ -15,7 +15,7 @@ export const transformJSX = (code) => {
   })
   return (res.code || '')
     .replace(/import \{.+\} from "vue";/, '')
-    .replace(/h\(_?resolveComponent\((.*?)\)/g, `h(this.getComponent($1)`)
+    .replace(/h\(_?resolveComponent\((.*?)\)/g, `h(getComponent($1)`)
     .replace(/_?resolveComponent/g, 'h')
     .replace(/_?createTextVNode\((.*?)\)/g, '$1')
     .trim()
