@@ -37,7 +37,7 @@
   "homepage": "https://opentiny.design/tiny-engine",
   "type": "module",
   "dependencies": {
-    "@babel/core": "7.18.13",
+    "@babel/standalone": "^7.23.0",
     "@opentiny/tiny-engine-builtin-component": "^2.6.0",
     "@vue/babel-plugin-jsx": "^1.2.5",
     "@vue/shared": "^3.3.4",
@@ -46,7 +46,6 @@
     "postcss-selector-parser": "^7.1.0"
   },
   "devDependencies": {
-    "@babel/standalone": "^7.23.0",
     "@opentiny/vue": "^3.28.0",
     "@opentiny/vue-huicharts": "^3.28.0",
     "@opentiny/vue-notify": "^3.28.0",
