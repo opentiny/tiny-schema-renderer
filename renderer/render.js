@@ -180,17 +180,17 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
       expression = `(e) => {(${expression}).call(this, e, ${data.params.join(',')})}`
     }
     return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(ctx, {
+      ...(isJsx ? {
+        getComponent: (name) => getComponent(name, ctx),
+        h,
+      } : {}),
       ...mergeScope,
       ...params
     })
   } catch (err) {
     // 解析抛出异常，则再尝试解析 JSX 语法。如果解析 JSX 语法仍然出现错误，isJsx 变量会确保不会再次递归执行解析
     if (!isJsx) {
-      return parseExpression(data, {
-        getComponent: (name) => getComponent(name, ctx),
-        h,
-        ...scope,
-      }, ctx, true)
+      return parseExpression(data, scope, ctx, true)
     }
     return undefined
   }
@@ -364,11 +364,7 @@ const parseJSXFunction = (data, scope, ctx) => {
         type: JS_EXPRESSION,
         value: data.value
       },
-      {
-        h,
-        getComponent: (name) => getComponent(name, ctx),
-        ...scope,
-      },
+      scope,
       ctx,
       true
     )
