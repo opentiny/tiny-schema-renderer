@@ -181,7 +181,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
     }
     const bindCtx = {
       ...(isJsx ? { getComponent: (name) => getComponent(name, ctx) } : {}),
-      ...ctx // 注意：这里解构ctx会丢失不可枚举对象，理论上不影响外部生成函数和表达式
+      ...ctx
     }
     return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(bindCtx, {
       ...(isJsx ? { h } : {}),
@@ -193,7 +193,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
     if (!isJsx) {
       return parseExpression(data, scope, ctx, true)
     }
-    return undefined
+    throw err
   }
 }
 
@@ -359,20 +359,15 @@ const parseJSXFunction = (data, scope, ctx) => {
     const newValue = transformJSX(data.value)
     const fnInfo = parseFunctionString(newValue)
     if (!fnInfo) throw Error('函数解析失败，请检查格式。示例：function fnName() { }')
-
-    const bindCtx = {
-      getComponent: (name) => getComponent(name, ctx),
-      ...ctx // 注意：这里解构ctx会丢失不可枚举对象，理论上不影响外部生成函数
-    }
     return parseExpression(
       {
         type: JS_EXPRESSION,
-        value: data.value
+        value: `(${data.value}).bind(this)`
       },
       scope,
       ctx,
       true
-    ).bind(bindCtx)
+    )
   } catch (error) {
     Notify({
       type: 'warning',
@@ -395,11 +390,11 @@ const parseJSFunction = (data, scope, ctx) => {
         parseExpression(
           {
             type: JS_EXPRESSION,
-            value: data.value
+            value: `(${data.value}).bind(this)`
           },
           scope,
           ctx
-        ).bind(ctx),
+        ),
         ctx
       )
     }
