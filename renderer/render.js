@@ -179,11 +179,12 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
       }, {})
       expression = `(e) => {(${expression}).call(this, e, ${data.params.join(',')})}`
     }
-    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(ctx, {
-      ...(isJsx ? {
-        getComponent: (name) => getComponent(name, ctx),
-        h,
-      } : {}),
+    const bindCtx = {
+      ...(isJsx ? { getComponent: (name) => getComponent(name, ctx) } : {}),
+      ...ctx // 注意：这里解构ctx会丢失不可枚举对象，理论上不影响外部生成函数和表达式
+    }
+    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(bindCtx, {
+      ...(isJsx ? { h } : {}),
       ...mergeScope,
       ...params
     })
@@ -359,6 +360,10 @@ const parseJSXFunction = (data, scope, ctx) => {
     const fnInfo = parseFunctionString(newValue)
     if (!fnInfo) throw Error('函数解析失败，请检查格式。示例：function fnName() { }')
 
+    const bindCtx = {
+      getComponent: (name) => getComponent(name, ctx),
+      ...ctx // 注意：这里解构ctx会丢失不可枚举对象，理论上不影响外部生成函数
+    }
     return parseExpression(
       {
         type: JS_EXPRESSION,
@@ -367,7 +372,7 @@ const parseJSXFunction = (data, scope, ctx) => {
       scope,
       ctx,
       true
-    )
+    ).bind(bindCtx)
   } catch (error) {
     Notify({
       type: 'warning',

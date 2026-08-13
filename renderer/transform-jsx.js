@@ -15,7 +15,7 @@ export const transformJSX = (code, customElements) => {
   })
   return (res.code || '')
     .replace(/import \{.+\} from "vue";/, '')
-    .replace(/h\(_?resolveComponent\((.*?)\)/g, `h(getComponent($1)`)
+    .replace(/h\(_?resolveComponent\((.*?)\)/g, `h(this.getComponent($1)`)
     .replace(/_?resolveComponent/g, 'h')
     .replace(/_?createTextVNode\((.*?)\)/g, '$1')
     .trim()
