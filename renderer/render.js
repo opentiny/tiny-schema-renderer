@@ -622,6 +622,11 @@ const injectPlaceHolder = (componentName, children) => {
 
 const getChildren = (schema, mergeScope, context) => {
   const { componentName, children } = schema
+
+  if (children === null || children === undefined) {
+    return null
+  }
+
   const renderChildren = injectPlaceHolder(componentName, children)
 
   if (!Array.isArray(renderChildren)) {
