@@ -533,9 +533,9 @@ const generateSlotGroup = (children, isCustomElm, schema) => {
   children.forEach((child) => {
     const { componentName, children, params = [], props } = child
     const slot = child.slot || props?.slot?.name || props?.slot || 'default'
-    const isNotEmptyTemplate = componentName === 'Template' && children.length
+    const isNotEmptyTemplate = componentName === 'Template' && children?.length > 0
 
-    isCustomElm && (child.props.slot = 'slot') // CE下需要给子节点加上slot标识
+    isCustomElm && (props?.slot = 'slot') // CE下需要给子节点加上slot标识
     slotGroup[slot] = slotGroup[slot] || {
       value: [],
       params,
