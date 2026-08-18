@@ -45,15 +45,15 @@ function ensureStyle(): void {
   const style = document.createElement('style')
   style.id = STYLE_ID
   style.textContent = `
-#${ROOT_ID}{position:fixed;top:16px;right:16px;z-index:10000;display:flex;flex-direction:column;pointer-events:none;width:330px;max-width:calc(100vw - 32px)}
-.genui-notify{pointer-events:auto;display:flex;align-items:flex-start;gap:12px;width:100%;box-sizing:border-box;padding:14px 16px;margin:0 0 12px;border-radius:8px;background:#fff;border:1px solid #ebeef5;box-shadow:0 6px 16px 0 rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12),0 9px 28px 8px rgba(0,0,0,.05);font:14px/1.4 system-ui,-apple-system,sans-serif;color:#303133;opacity:0;transform:translateX(100%);overflow:hidden;transition:opacity ${ANIM_MS}ms ease,transform ${ANIM_MS}ms ease,height ${ANIM_MS}ms ease,padding ${ANIM_MS}ms ease,margin ${ANIM_MS}ms ease,border-width ${ANIM_MS}ms ease}
+#${ROOT_ID}{position:fixed;top:16px;right:16px;z-index:10000;display:flex;flex-direction:column;pointer-events:none;width:340px;max-width:calc(100vw - 32px)}
+.genui-notify{pointer-events:auto;display:flex;align-items:flex-start;gap:12px;width:100%;box-sizing:border-box;padding:14px 16px;margin:0 0 12px;border-radius:8px;background:#fff;border:1px solid #ebeef5;box-shadow:0 6px 16px 0 rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12),0 9px 28px 8px rgba(0,0,0,.05);font:14px/1.4 system-ui,-apple-system,sans-serif;color:#303133;opacity:0;transform:translateX(100%);transition:opacity ${ANIM_MS}ms ease,transform ${ANIM_MS}ms ease,height ${ANIM_MS}ms ease,padding ${ANIM_MS}ms ease,margin ${ANIM_MS}ms ease,border-width ${ANIM_MS}ms ease}
 .genui-notify--enter{opacity:1;transform:translateX(0)}
 .genui-notify--leaving{opacity:0;transform:translateY(-12px);padding-top:0;padding-bottom:0;margin-bottom:0;border-width:0}
 .genui-notify__icon{flex:none;width:24px;height:24px;margin-top:1px;line-height:0}
 .genui-notify__icon svg{display:block}
 .genui-notify__body{flex:1;min-width:0}
 .genui-notify__title{font-weight:600;font-size:16px;line-height:24px;color:#303133}
-.genui-notify__message{margin-top:4px;font-size:14px;line-height:1.5;color:#606266;word-break:break-word}
+.genui-notify__message{margin-top:4px;font-size:14px;line-height:1.5;color:#606266;word-break:break-word;max-height:96px;overflow:auto}
 .genui-notify__close{flex:none;margin:-4px -6px 0 0;border:0;background:transparent;cursor:pointer;color:#909399;font-size:18px;line-height:1;padding:4px;border-radius:4px}
 .genui-notify__close:hover{color:#606266;background:#f5f7fa}
 .genui-notify--success .genui-notify__icon{color:${TYPE_COLOR.success}}
