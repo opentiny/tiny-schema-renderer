@@ -1,8 +1,8 @@
 import babelPluginJSX from '@vue/babel-plugin-jsx'
-import { transformSync } from '@babel/core'
+import { transform } from '@babel/standalone'
 
-export const transformJSX = (code) => {
-  const res = transformSync(code, {
+export const transformJSX = (code, customElements) => {
+  const res = transform(code, {
     plugins: [
       [
         babelPluginJSX,

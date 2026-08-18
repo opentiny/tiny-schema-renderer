@@ -88,7 +88,7 @@ const transformJSX = (code) => {
   const customSettings = getCustomSettings()
 
   if (customSettings.transformJSX) {
-    return customSettings.transformJSX(code)
+    return customSettings.transformJSX(code, customElements)
   } else {
     console.warn('当前不支持JSX解析，如需支持，请配置customSettings.transformJSX')
     return code
@@ -167,7 +167,6 @@ export const isStateAccessor = (stateData) =>
 const parseExpression = (data, scope, ctx, isJsx = false) => {
   try {
     const mergeScope = {
-      ...ctx,
       ...scope,
       slotScope: scope
     }
@@ -180,7 +179,12 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
       }, {})
       expression = `(e) => {(${expression}).call(this, e, ${data.params.join(',')})}`
     }
-    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(ctx, {
+    const bindCtx = {
+      ...(isJsx ? { getComponent: (name) => getComponent(name, ctx) } : {}),
+      ...ctx
+    }
+    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(bindCtx, {
+      ...(isJsx ? { h } : {}),
       ...mergeScope,
       ...params
     })
@@ -189,7 +193,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
     if (!isJsx) {
       return parseExpression(data, scope, ctx, true)
     }
-    return undefined
+    throw err
   }
 }
 
@@ -350,16 +354,20 @@ export const getComponent = (name, context) => {
 }
 
 // 解析JSX字符串为可执行函数
-const parseJSXFunction = (data, ctx) => {
+const parseJSXFunction = (data, scope, ctx) => {
   try {
     const newValue = transformJSX(data.value)
     const fnInfo = parseFunctionString(newValue)
     if (!fnInfo) throw Error('函数解析失败，请检查格式。示例：function fnName() { }')
-
-    return newFn(...fnInfo.params, fnInfo.body).bind({
-      ...ctx,
-      getComponent: (name) => getComponent(name, ctx)
-    })
+    return parseExpression(
+      {
+        type: JS_EXPRESSION,
+        value: `(${data.value}).bind(this)`
+      },
+      scope,
+      ctx,
+      true
+    )
   } catch (error) {
     Notify({
       type: 'warning',
@@ -382,19 +390,18 @@ const parseJSFunction = (data, scope, ctx) => {
         parseExpression(
           {
             type: JS_EXPRESSION,
-            value: data.value
+            value: `(${data.value}).bind(this)`
           },
           scope,
           ctx
-        ).bind(ctx),
+        ),
         ctx
       )
     }
     const innerFn = newFn(`return ${data.value}`).bind(ctx)()
     return generateFn(innerFn, ctx)
   } catch (error) {
-    console.error(error)
-    return parseJSXFunction(data, ctx)
+    return parseJSXFunction(data, scope, ctx)
   }
 }
 
