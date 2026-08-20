@@ -1,6 +1,7 @@
 import { shallowReactive } from "vue";
 
 export const MATERIALS = Symbol('MATERIALS');
+export const NOTIFY = Symbol('NOTIFY');
 
 export default () => {
   const context = shallowReactive({});

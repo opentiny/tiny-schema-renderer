@@ -14,7 +14,7 @@ import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, o
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
-import useContext, { MATERIALS } from './useContext'
+import useContext, { MATERIALS, NOTIFY } from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
@@ -39,17 +39,23 @@ export default {
       Object.keys(obj).forEach((key) => delete obj[key])
     }
 
-    // 设置 customSettings，如 Function
+    // 仅将进程级配置写入单例（如 Function）；notify / materials 走实例 context
     const { setCustomSettings } = useCustomSetting()
 
     const customSettings = inject(RENDERER_SETTINGS_KEY, null)
     if (customSettings) {
-      setCustomSettings(customSettings)
-      context[MATERIALS] = customSettings.materials ?? {}
+      const { materials, notify, ...globalSettings } = customSettings
+      setCustomSettings(globalSettings)
+      context[MATERIALS] = materials ?? {}
+      context[NOTIFY] = notify ? { notify } : {}
     }
 
-    watch(() => customSettings.materials, (newVal) => {
+    watch(() => customSettings?.materials, (newVal) => {
       context[MATERIALS] = newVal ?? {}
+    })
+
+    watch(() => customSettings?.notify, (newVal) => {
+      context[NOTIFY] = newVal ? { notify: newVal } : {}
     })
 
     const customContext = inject('customContext', null)

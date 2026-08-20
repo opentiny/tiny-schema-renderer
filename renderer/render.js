@@ -13,7 +13,7 @@
 import { h, provide, inject } from 'vue'
 
 import { isHTMLTag, hyphenate } from '@vue/shared'
-import Notify from '@opentiny/vue-notify'
+import { Notify } from './notify'
 import useCustomSetting, { DEFAULT_RENDERER_SETTINGS } from './useCustomSetting'
 import { MATERIALS } from './useContext'
 import { applyDefaultPropsToProps } from './applyDefaultProps'
@@ -265,18 +265,18 @@ export const generateFn = (innerFn, context) => {
           type: 'warning',
           title: `函数:${innerFn.name}执行报错`,
           message: error?.message || `函数:${innerFn.name}执行报错，请检查语法`
-        })
+        }, context)
       }
 
       // 这里注意如果innerFn返回的是一个promise则需要捕获异常，重新返回默认一条空数据
-      if (result?.then) {
+      if (typeof result?.then === 'function') {
         result = new Promise((resolve) => {
           result.then(resolve).catch((error) => {
             Notify({
               type: 'warning',
               title: '异步函数执行报错',
               message: error?.message || '异步函数执行报错，请检查语法'
-            })
+            }, context)
             // 这里需要至少返回一条空数据，方便用户使用表格默认插槽
             resolve({
               result: [{}],
@@ -373,7 +373,7 @@ const parseJSXFunction = (data, scope, ctx) => {
       type: 'warning',
       title: '函数声明解析报错',
       message: error?.message || '函数声明解析报错，请检查语法'
-    })
+    }, ctx)
 
     return newFn()
   }
