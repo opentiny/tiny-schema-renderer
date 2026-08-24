@@ -233,7 +233,7 @@ function renderComponent(schema, scope, context) {
 
 const renderDefault = (children, scope, ctx) => {
   if (!children) {
-    return []
+    return null
   }
   const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx))
 
@@ -623,15 +623,11 @@ const injectPlaceHolder = (componentName, children) => {
 const getChildren = (schema, mergeScope, context) => {
   const { componentName, children } = schema
 
-  if (children === null || children === undefined) {
-    return null
-  }
-
   const renderChildren = injectPlaceHolder(componentName, children)
 
   if (!Array.isArray(renderChildren)) {
     const content = parseData(renderChildren, mergeScope, context)
-    return { default: () => content }
+    return content == null ? null : { default: () => content }
   }
 
   if (!renderChildren.length) {
