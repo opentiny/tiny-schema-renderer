@@ -237,7 +237,7 @@ function renderComponent(schema, scope, context) {
 
 const renderDefault = (children, scope, ctx) => {
   if (!children) {
-    return []
+    return null
   }
   const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx))
 
@@ -540,9 +540,9 @@ const generateSlotGroup = (children, isCustomElm, schema) => {
   children.forEach((child) => {
     const { componentName, children, params = [], props } = child
     const slot = child.slot || props?.slot?.name || props?.slot || 'default'
-    const isNotEmptyTemplate = componentName === 'Template' && children.length
+    const isNotEmptyTemplate = componentName === 'Template' && children?.length > 0
 
-    isCustomElm && (child.props.slot = 'slot') // CE下需要给子节点加上slot标识
+    isCustomElm && props && (props.slot = 'slot') // CE下需要给子节点加上slot标识
     slotGroup[slot] = slotGroup[slot] || {
       value: [],
       params,
@@ -555,7 +555,7 @@ const generateSlotGroup = (children, isCustomElm, schema) => {
   return slotGroup
 }
 
-const renderSlot = (children, scope, schema, isCustomElm) => {
+const renderSlot = (children, scope, context, schema, isCustomElm) => {
   if (children.some((a) => a.componentName === 'Template')) {
     const slotGroup = generateSlotGroup(children, isCustomElm, schema)
     const slots = {}
@@ -563,13 +563,13 @@ const renderSlot = (children, scope, schema, isCustomElm) => {
     Object.keys(slotGroup).forEach((slotName) => {
       const currentSlot = slotGroup[slotName]
 
-      slots[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, currentSlot.parent)
+      slots[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, context)
     })
 
     return slots
   }
 
-  return { default: () => renderDefault(children, scope, schema) }
+  return { default: () => renderDefault(children, scope, context) }
 }
 
 const directChildrenHasTemplate = (children) => children.some((child) => child.componentName === 'Template')
@@ -629,11 +629,12 @@ const injectPlaceHolder = (componentName, children) => {
 
 const getChildren = (schema, mergeScope, context) => {
   const { componentName, children } = schema
+
   const renderChildren = injectPlaceHolder(componentName, children)
 
   if (!Array.isArray(renderChildren)) {
     const content = parseData(renderChildren, mergeScope, context)
-    return { default: () => content }
+    return content == null ? null : { default: () => content }
   }
 
   if (!renderChildren.length) {
@@ -643,7 +644,7 @@ const getChildren = (schema, mergeScope, context) => {
   const isCustomElm = customElements[componentName]
 
   if (directChildrenHasTemplate(renderChildren)) {
-    return renderSlot(renderChildren, mergeScope, schema, isCustomElm)
+    return renderSlot(renderChildren, mergeScope, context, schema, isCustomElm)
   }
 
   // 这里 children 需要返回一个默认插槽的函数，避免 vue 告警：
