@@ -19,6 +19,9 @@ import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
 import { getPageLifeCycleFns } from './lifeCycles'
+import { useAccessorMap } from './accessor'
+import { useState } from './state'
+import { reset } from './dataUtils'
 
 export default {
   props: {
@@ -35,9 +38,6 @@ export default {
     });
     const { context, oldSchema, setContext, getContext } = useContext()
     const cssScopeId = `data-schema-${Math.random().toString(36).slice(2, 8)}`
-    const reset = (obj) => {
-      Object.keys(obj).forEach((key) => delete obj[key])
-    }
 
     // 仅将进程级配置写入单例（如 Function）；notify / materials 走实例 context
     const { setCustomSettings } = useCustomSetting()
@@ -67,7 +67,8 @@ export default {
 
     const pageSchema = reactive({})
     const methods = {}
-    const state = reactive({})
+    const { clearStateAccessors, registerStateAccessors } = useAccessorMap(getContext)
+    const { state, setState: applyState } = useState({ getContext, registerStateAccessors })
     const refs = shallowReactive({})
     let pageOnUnmounted = null
 
@@ -99,12 +100,13 @@ export default {
     }
 
     const setState = (data, clear) => {
-      clear && reset(state)
+      if (clear) {
+        clearStateAccessors()
+      }
       if (!pageSchema.state) {
         pageSchema.state = data
       }
-
-      Object.assign(state, parseData(data, {}, getContext()) || {})
+      applyState(data, clear)
     }
 
     const setRefs = (data, clear) => {
@@ -120,6 +122,9 @@ export default {
       if (!data || !Object.keys(data).length) {
         return
       }
+
+      clearStateAccessors()
+
       const newSchema = JSON.parse(JSON.stringify(data))
       const context = {
         state,
@@ -133,7 +138,7 @@ export default {
       setMethods(newSchema.methods, true)
 
       // 这里setState（会触发画布渲染），是因为状态管理里面的变量会用到props、utils、bridge、stores、methods
-      setState(newSchema.state, true)
+      applyState(newSchema.state)
       setRefs(newSchema.refs, true)
 
       await invokePageOnUnmounted()
@@ -155,6 +160,7 @@ export default {
     }
 
     onUnmounted(async () => {
+      clearStateAccessors()
       await invokePageOnUnmounted()
     })
 
