@@ -33,6 +33,7 @@ import {
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
+import { getBlock } from './block'
 
 const { getCustomSettings } = useCustomSetting()
 
@@ -197,7 +198,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
   }
 }
 
-function renderComponent(schema, scope, context) {
+function renderComponent(schema, scope, context, slots) {
   const { componentName, loop, loopArgs, condition } = schema
 
   // 处理数据源和表格fetchData的映射关系
@@ -205,6 +206,15 @@ function renderComponent(schema, scope, context) {
 
   if (!componentName) {
     return null
+  }
+
+  if (componentName === 'Slot') {
+    const slotName = schema.props.name || 'default'
+    const params = (schema.props.params || []).reduce((acc, param) => {
+      acc[param.name] = parseData(param.value, scope, context)
+      return acc
+    }, {})
+    return slots?.[slotName]?.(params) || getChildren(schema, scope, context)?.default?.(params) || null
   }
 
   const component = getComponent(componentName, context)
@@ -227,7 +237,7 @@ function renderComponent(schema, scope, context) {
       return null
     }
 
-    const Ele = h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context))
+    const Ele = h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context, slots))
 
     return Ele
   }
@@ -235,11 +245,11 @@ function renderComponent(schema, scope, context) {
   return loop ? loopList?.map(renderElement) : renderElement()
 }
 
-const renderDefault = (children, scope, ctx) => {
+const renderDefault = (children, scope, ctx, slots) => {
   if (!children) {
     return null
   }
-  const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx))
+  const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx, slots))
 
   return childrenComponents.filter(Boolean)
 }
@@ -350,7 +360,7 @@ const generateCollection = (schema) => {
 }
 
 export const getComponent = (name, context) => {
-  return Mapper[name] || context[MATERIALS]?.components?.[name] || customElements[name] || (isHTMLTag(name) ? name : null)
+  return Mapper[name] || getBlock(name, context) || context[MATERIALS]?.components?.[name] || customElements[name] || (isHTMLTag(name) ? name : null)
 }
 
 // 解析JSX字符串为可执行函数
@@ -555,7 +565,7 @@ const generateSlotGroup = (children, isCustomElm, schema) => {
   return slotGroup
 }
 
-const renderSlot = (children, scope, context, schema, isCustomElm) => {
+const renderSlot = (children, scope, context, schema, isCustomElm, slots) => {
   if (children.some((a) => a.componentName === 'Template')) {
     const slotGroup = generateSlotGroup(children, isCustomElm, schema)
     const slots = {}
@@ -563,13 +573,13 @@ const renderSlot = (children, scope, context, schema, isCustomElm) => {
     Object.keys(slotGroup).forEach((slotName) => {
       const currentSlot = slotGroup[slotName]
 
-      slots[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, context)
+      slots[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, context, slots)
     })
 
     return slots
   }
 
-  return { default: () => renderDefault(children, scope, context) }
+  return { default: () => renderDefault(children, scope, context, slots) }
 }
 
 const directChildrenHasTemplate = (children) => children.some((child) => child.componentName === 'Template')
@@ -627,7 +637,7 @@ const injectPlaceHolder = (componentName, children) => {
   return children
 }
 
-const getChildren = (schema, mergeScope, context) => {
+const getChildren = (schema, mergeScope, context, slots) => {
   const { componentName, children } = schema
 
   const renderChildren = injectPlaceHolder(componentName, children)
@@ -650,7 +660,7 @@ const getChildren = (schema, mergeScope, context) => {
   // 这里 children 需要返回一个默认插槽的函数，避免 vue 告警：
   // Non-function value encountered for default slot. Prefer function slots for better performance.
   return {
-    default: () => children.map?.((child) => renderComponent(child, mergeScope, context)).filter(Boolean)
+    default: () => children.map?.((child) => renderComponent(child, mergeScope, context, slots)).filter(Boolean)
   }
 }
 
@@ -666,9 +676,9 @@ export const renderer = {
   },
   render() {
     const context = inject('pageContext')
-    const { scope, schema } = this
+    const { scope, schema, $slots: slots } = this
 
-    return renderComponent(schema, scope, context)
+    return renderComponent(schema, scope, context, slots)
   }
 }
 

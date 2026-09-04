@@ -10,11 +10,11 @@
  *
  */
 
-import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured, onUnmounted, watch } from 'vue'
+import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured, onUnmounted, watch, toRaw, markRaw } from 'vue'
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
-import useContext, { MATERIALS, NOTIFY } from './useContext'
+import useContext, { BLOCKS, MATERIALS, NOTIFY } from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
@@ -25,6 +25,14 @@ export default {
     schema: {
       type: Object,
       default: () => ({})
+    },
+    props: {
+      type: Object,
+      default: () => ({})
+    },
+    dispatchEvent: {
+      type: Function,
+      default: () => () => {}
     }
   },
   expose: ['setContext', 'getContext', 'setState'],
@@ -34,6 +42,14 @@ export default {
       return false;
     });
     const { context, oldSchema, setContext, getContext } = useContext()
+    // markRaw：cache 上的写入不触发更新；子 RenderMain 复用父级同一份，方便递归查找已加载的 block
+    const parentPageContext = inject('pageContext', null)
+    context[BLOCKS] = parentPageContext?.[BLOCKS] ?? markRaw({})
+    context.props = props.props
+    watch(() => props.props, (newVal) => {
+      context.props = newVal
+    })
+
     const cssScopeId = `data-schema-${Math.random().toString(36).slice(2, 8)}`
     const reset = (obj) => {
       Object.keys(obj).forEach((key) => delete obj[key])
@@ -85,7 +101,8 @@ export default {
     }
 
     const setMethods = (data = {}, clear) => {
-      clear && reset(methods)
+      clear && reset(methods);
+      if (clear) {methods.dispatchEvent = props.dispatchEvent} 
       // 这里有些方法在画布还是有执行的必要的，比如说表格的renderer和formatText方法，包括一些自定义渲染函数
       Object.assign(
         methods,
@@ -124,7 +141,8 @@ export default {
       const context = {
         state,
         refs,
-        cssScopeId
+        cssScopeId,
+        props: props.props
       }
       // 此处提升很重要，因为setState、initProps也会触发画布重新渲染，所以需要提升上下文环境的设置时间
       setContext(context, true)
@@ -160,7 +178,7 @@ export default {
 
     watchEffect(() => {
       // 最后一个判断与上一次的schema做比较，以解决组件循环刷新问题
-      if (!props.schema || !Object.keys(props.schema) || _.isEqual(props.schema, oldSchema.value)) {
+      if (!props.schema || !Object.keys(props.schema).length || _.isEqual(props.schema, oldSchema.value)) {
         return
       }
 
@@ -191,7 +209,7 @@ export default {
     }
 
     return this.pageSchema.children?.length
-      ? h(renderer, { schema: rootChildrenSchema, parent: this.pageSchema })
+      ? h(renderer, { schema: rootChildrenSchema, parent: this.pageSchema }, this.$slots)
       : [h(Loading)]
   }
 }
