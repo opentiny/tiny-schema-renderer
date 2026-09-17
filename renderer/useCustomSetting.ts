@@ -6,6 +6,7 @@ export type { NotifyHandler }
 
 export interface IRendererSettings {
   Function?: FunctionConstructor
+  transformJSX?: (code: string, customElements?: Record<string, unknown>) => string
   materials?: Record<string, Component>
   defaultPropsMap?: DefaultPropsMap
   notify?: NotifyHandler

@@ -1,4 +1,4 @@
-import { NOTIFY } from './useContext'
+import { RENDERER_SETTINGS } from './useContext'
 import { showDomToast, fallbackNotify } from './notify-dom'
 
 export type NotifyType = 'success' | 'warning' | 'error' | 'info'
@@ -12,12 +12,9 @@ export interface NotifyOptions {
 
 export type NotifyHandler = (options: NotifyOptions) => void
 
-export { NOTIFY }
-
 export function Notify(options: NotifyOptions, ctx?: Record<PropertyKey, any>): void {
   try {
-    const settings = ctx?.[NOTIFY] as { notify?: NotifyHandler } | undefined
-    const custom = settings?.notify
+    const custom = ctx?.[RENDERER_SETTINGS]?.notify as NotifyHandler | undefined
     if (typeof custom === 'function') {
       custom(options)
       return
