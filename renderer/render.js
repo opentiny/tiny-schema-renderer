@@ -15,7 +15,7 @@ import { h, provide, inject } from 'vue'
 import { isHTMLTag, hyphenate } from '@vue/shared'
 import { Notify } from './notify'
 import useCustomSetting, { DEFAULT_RENDERER_SETTINGS } from './useCustomSetting'
-import { MATERIALS } from './useContext'
+import { RENDERER_SETTINGS } from './useContext'
 import { applyDefaultPropsToProps } from './applyDefaultProps'
 import {
   CanvasRow,
@@ -73,9 +73,11 @@ const isFunctionConstructor = (fn) => {
   return true
 }
 
+const getRendererSettings = (ctx) => ctx?.[RENDERER_SETTINGS] ?? getCustomSettings() ?? {}
+
 // 规避创建function eslint报错
-export const newFn = (...argv) => {
-  const Fn = getCustomSettings().Function ?? DEFAULT_RENDERER_SETTINGS.Function
+export const newFn = (argv = [], ctx) => {
+  const Fn = getRendererSettings(ctx).Function ?? DEFAULT_RENDERER_SETTINGS.Function
 
   if (Fn && isFunctionConstructor(Fn)) {
     return new Fn(...argv)
@@ -84,8 +86,8 @@ export const newFn = (...argv) => {
   return new DEFAULT_RENDERER_SETTINGS.Function(...argv)
 }
 
-const transformJSX = (code) => {
-  const customSettings = getCustomSettings()
+const transformJSX = (code, ctx) => {
+  const customSettings = getRendererSettings(ctx)
 
   if (customSettings.transformJSX) {
     return customSettings.transformJSX(code, customElements)
@@ -170,7 +172,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
       ...scope,
       slotScope: scope
     }
-    let expression = isJsx ? transformJSX(data.value) : data.value
+    let expression = isJsx ? transformJSX(data.value, ctx) : data.value
     let params = {}
     if (data.params) {
       params = data.params.reduce((acc, paramName) => {
@@ -183,7 +185,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
       ...(isJsx ? { getComponent: (name) => getComponent(name, ctx) } : {}),
       ...ctx
     }
-    return newFn('$scope', `with($scope || {}) { return ${expression} }`).call(bindCtx, {
+    return newFn(['$scope', `with($scope || {}) { return ${expression} }`], ctx).call(bindCtx, {
       ...(isJsx ? { h } : {}),
       ...mergeScope,
       ...params
@@ -220,7 +222,8 @@ function renderComponent(schema, scope, context) {
       item,
       index,
       loopArgs,
-      scope
+      scope,
+      context
     }) : scope
 
     if (!parseCondition(condition, mergeScope, context)) {
@@ -350,13 +353,13 @@ const generateCollection = (schema) => {
 }
 
 export const getComponent = (name, context) => {
-  return Mapper[name] || context[MATERIALS]?.components?.[name] || customElements[name] || (isHTMLTag(name) ? name : null)
+  return Mapper[name] || getRendererSettings(context).materials?.components?.[name] || customElements[name] || (isHTMLTag(name) ? name : null)
 }
 
 // 解析JSX字符串为可执行函数
 const parseJSXFunction = (data, scope, ctx) => {
   try {
-    const newValue = transformJSX(data.value)
+    const newValue = transformJSX(data.value, ctx)
     const fnInfo = parseFunctionString(newValue)
     if (!fnInfo) throw Error('函数解析失败，请检查格式。示例：function fnName() { }')
     return parseExpression(
@@ -375,7 +378,7 @@ const parseJSXFunction = (data, scope, ctx) => {
       message: error?.message || '函数声明解析报错，请检查语法'
     }, ctx)
 
-    return newFn()
+    return newFn([], ctx)
   }
 }
 
@@ -398,7 +401,7 @@ const parseJSFunction = (data, scope, ctx) => {
         ctx
       )
     }
-    const innerFn = newFn(`return ${data.value}`).bind(ctx)()
+    const innerFn = newFn([`return ${data.value}`], ctx).bind(ctx)()
     return generateFn(innerFn, ctx)
   } catch (error) {
     return parseJSXFunction(data, scope, ctx)
@@ -427,11 +430,11 @@ const parseCondition = (condition, scope, ctx) => {
   return condition == null ? true : parseData(condition, scope, ctx)
 }
 
-const parseLoopArgs = (_loop) => {
+const parseLoopArgs = (_loop, ctx) => {
   if (_loop) {
     const { item, index, loopArgs = '' } = _loop
     const body = `return {${loopArgs[0] || 'item'}: item, ${loopArgs[1] || 'index'} : index }`
-    return newFn('item,index', body)(item, index)
+    return newFn(['item,index', body], ctx)(item, index)
   }
   return undefined
 }
@@ -596,20 +599,20 @@ const getBindProps = (schema, scope, context) => {
   // 绑定组件属性时需要将 className 重命名为 class，防止覆盖组件内置 class
   bindProps.class = bindProps.className
   delete bindProps.className
-  const defaultPropsMap = context[MATERIALS]?.defaultPropsMap || {}
+  const defaultPropsMap = getRendererSettings(context).materials?.defaultPropsMap || {}
   applyDefaultPropsToProps(componentName, bindProps, defaultPropsMap)
 
   return bindProps
 }
 
-const getLoopScope = ({ scope, index, item, loopArgs }) => {
+const getLoopScope = ({ scope, index, item, loopArgs, context }) => {
   return {
     ...scope,
     ...(parseLoopArgs({
       item,
       index,
       loopArgs
-    }) || {})
+    }, context) || {})
   }
 }
 
