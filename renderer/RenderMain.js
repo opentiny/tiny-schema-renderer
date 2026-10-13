@@ -124,7 +124,9 @@ export default {
       const context = {
         state,
         refs,
-        cssScopeId
+        cssScopeId,
+        // 将物料包注册的工具函数注入上下文，JSFunction / JSExpression 中通过 this.utils.xxx 调用
+        utils: getContext()[MATERIALS]?.utils || {}
       }
       // 此处提升很重要，因为setState、initProps也会触发画布重新渲染，所以需要提升上下文环境的设置时间
       setContext(context, true)
