@@ -240,7 +240,7 @@ function renderComponent(schema, scope, context, slots) {
       return null
     }
 
-    const Ele = h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context, slots))
+    const Ele = h(component, getBindProps(schema, mergeScope, context, slots), getChildren(schema, mergeScope, context, slots))
 
     return Ele
   }
@@ -257,8 +257,8 @@ const renderDefault = (children, scope, ctx, slots) => {
   return childrenComponents.filter(Boolean)
 }
 
-const parseJSSlot = (data, scope, ctx) => {
-  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, ctx)
+const parseJSSlot = (data, scope, ctx, slots) => {
+  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, ctx, slots)
 }
 
 export const generateFn = (innerFn, context) => {
@@ -420,11 +420,11 @@ const parseJSFunction = (data, scope, ctx) => {
 
 const parseList = []
 
-export function parseData(data, scope, ctx) {
+export function parseData(data, scope, ctx, slots) {
   let res = data
   parseList.some((item) => {
     if (item.type(data)) {
-      res = item.parseFunc(data, scope, ctx)
+      res = item.parseFunc(data, scope, ctx, slots)
 
       return true
     }
@@ -449,14 +449,14 @@ const parseLoopArgs = (_loop) => {
   return undefined
 }
 
-const parseObjectData = (data, scope, ctx) => {
+const parseObjectData = (data, scope, ctx, slots) => {
   if (!data) {
     return data
   }
 
   // 如果是状态访问器,则直接解析默认值
   if (isStateAccessor(data)) {
-    return parseData(data.defaultValue, scope, ctx)
+    return parseData(data.defaultValue, scope, ctx, slots)
   }
 
   const res = {}
@@ -465,7 +465,7 @@ const parseObjectData = (data, scope, ctx) => {
     if (key === 'slot' && value?.name) {
       res[key] = value.name
     } else {
-      res[key] = parseData(value, scope, ctx)
+      res[key] = parseData(value, scope, ctx, slots)
     }
   })
 
@@ -481,7 +481,8 @@ const parseObjectData = (data, scope, ctx) => {
         value: `(value) => ${modelValue[1].value}=value`
       },
       scope,
-      ctx
+      ctx,
+      slots
     )
   }
 
@@ -492,7 +493,7 @@ const parseObjectData = (data, scope, ctx) => {
     res.ref = parseData({
       type: JS_FUNCTION,
       value: `(instance) => ${refValue[1].value}=instance`
-    }, scope, ctx)
+    }, scope, ctx, slots)
   }
 
   return res
@@ -502,8 +503,8 @@ const parseString = (data) => {
   return data.trim()
 }
 
-const parseArray = (data, scope, ctx) => {
-  return data.map((item) => parseData(item, scope, ctx))
+const parseArray = (data, scope, ctx, slots) => {
+  return data.map((item) => parseData(item, scope, ctx, slots))
 }
 
 const parseFunction = (data, scope, ctx) => {
@@ -571,15 +572,15 @@ const generateSlotGroup = (children, isCustomElm, schema) => {
 const renderSlot = (children, scope, context, schema, isCustomElm, slots) => {
   if (children.some((a) => a.componentName === 'Template')) {
     const slotGroup = generateSlotGroup(children, isCustomElm, schema)
-    const slots = {}
+    const slotsMap = {}
 
     Object.keys(slotGroup).forEach((slotName) => {
       const currentSlot = slotGroup[slotName]
 
-      slots[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, context, slots)
+      slotsMap[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, context, slots)
     })
 
-    return slots
+    return slotsMap
   }
 
   return { default: () => renderDefault(children, scope, context, slots) }
@@ -587,7 +588,7 @@ const renderSlot = (children, scope, context, schema, isCustomElm, slots) => {
 
 const directChildrenHasTemplate = (children) => children.some((child) => child.componentName === 'Template')
 
-const getBindProps = (schema, scope, context) => {
+const getBindProps = (schema, scope, context, slots) => {
   const { componentName } = schema
 
   if (componentName === 'CanvasPlaceholder') {
@@ -596,7 +597,7 @@ const getBindProps = (schema, scope, context) => {
 
   const { cssScopeId } = context
   const bindProps = {
-    ...parseData(schema.props, scope, context),
+    ...parseData(schema.props, scope, context, slots),
     'data-id': schema.id,
     'data-tag': componentName,
     [cssScopeId]: ''
@@ -657,7 +658,7 @@ const getChildren = (schema, mergeScope, context, slots) => {
   const isCustomElm = customElements[componentName]
 
   if (directChildrenHasTemplate(renderChildren)) {
-    return renderSlot(renderChildren, mergeScope, context, schema, isCustomElm)
+    return renderSlot(renderChildren, mergeScope, context, schema, isCustomElm, slots)
   }
 
   // 这里 children 需要返回一个默认插槽的函数，避免 vue 告警：
