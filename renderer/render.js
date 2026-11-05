@@ -209,8 +209,11 @@ function renderComponent(schema, scope, context, slots) {
   }
 
   if (componentName === 'Slot') {
-    const slotName = schema.props.name || 'default'
-    const params = (schema.props.params || []).reduce((acc, param) => {
+    const slotProps = schema.props || {}
+    const slotName = slotProps.name || 'default'
+    const rawParams = slotProps.params
+    const paramList = Array.isArray(rawParams) ? rawParams : []
+    const params = paramList.reduce((acc, param) => {
       acc[param.name] = parseData(param.value, scope, context)
       return acc
     }, {})

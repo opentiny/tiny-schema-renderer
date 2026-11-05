@@ -7,11 +7,11 @@ export function defineBlock(name: string, schema: any) {
   const rawSchema = markRaw(schema)
   return markRaw(defineComponent({
     name,
-    props: Object.keys(schema.inputs),
-    emits: Object.keys(schema.outputs),
+    props: Object.keys(schema.inputs ?? {}),
+    emits: Object.keys(schema.outputs ?? {}),
     setup(props, { slots, emit }) {
       const dispatchEvent = (event: string, ...data: any) => {
-        if (Object.keys(schema.outputs).includes(event)) {
+        if (Object.keys(schema.outputs ?? {}).includes(event)) {
           emit(event, ...data)
         } else {
           console.warn(`Event ${event} not found in schema.outputs`)
