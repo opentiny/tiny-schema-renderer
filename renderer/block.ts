@@ -17,7 +17,7 @@ export function defineBlock(name: string, schema: any) {
           console.warn(`Event ${event} not found in schema.outputs`)
         }
       }
-      return () => h(RenderMain, { schema: rawSchema, props, dispatchEvent }, slots)
+      return () => h(RenderMain, { schema: rawSchema, props, dispatchEvent, blockName: name }, slots)
     }
   }))
 }

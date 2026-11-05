@@ -14,7 +14,7 @@ import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, o
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
-import useContext, { BLOCKS, MATERIALS, NOTIFY } from './useContext'
+import useContext, { BLOCKS, MATERIALS, NOTIFY, RENDERER_INSTANCE_ID } from './useContext'
 import { setPageCss } from './pageCss'
 import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
@@ -33,6 +33,11 @@ export default {
     dispatchEvent: {
       type: Function,
       default: () => () => {}
+    },
+    // 区块名：有值时按 rendererInstanceId + blockName 生成稳定 cssScopeId，避免同实例多区块重复插 style
+    blockName: {
+      type: String,
+      default: ''
     }
   },
   expose: ['setContext', 'getContext', 'setState'],
@@ -45,12 +50,18 @@ export default {
     // markRaw：cache 上的写入不触发更新；子 RenderMain 复用父级同一份，方便递归查找已加载的 block
     const parentPageContext = inject('pageContext', null)
     context[BLOCKS] = parentPageContext?.[BLOCKS] ?? markRaw({})
+    // Symbol 键不会被 setContext(clear) 清掉；跨 Renderer 实例隔离同名 block 的 style
+    const rendererInstanceId =
+      parentPageContext?.[RENDERER_INSTANCE_ID] ?? Math.random().toString(36).slice(2, 8)
+    context[RENDERER_INSTANCE_ID] = rendererInstanceId
     context.props = props.props
     watch(() => props.props, (newVal) => {
       context.props = newVal
     })
 
-    const cssScopeId = `data-schema-${Math.random().toString(36).slice(2, 8)}`
+    const cssScopeId = props.blockName
+      ? `data-schema-${rendererInstanceId}-block-${props.blockName}`
+      : `data-schema-${rendererInstanceId}`
     const reset = (obj) => {
       Object.keys(obj).forEach((key) => delete obj[key])
     }
