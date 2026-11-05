@@ -1,32 +1,46 @@
-import { defineAsyncComponent, defineComponent, h, markRaw } from "vue";
-import { BLOCKS, MATERIALS } from "./useContext.js";
+import { defineAsyncComponent, defineComponent, h, markRaw, type Component } from 'vue'
+import { BLOCKS, MATERIALS } from './useContext.js'
+import { getSchemaIOKeys, type BlockSchema } from './schema'
 
-const RenderMain = defineAsyncComponent(() => import('./RenderMain.js').then(m => m.default));
+const RenderMain = defineAsyncComponent(() => import('./RenderMain.js').then((m) => m.default))
 
-export function defineBlock(name: string, schema: any) {
-  const rawSchema = markRaw(schema)
-  return markRaw(defineComponent({
-    name,
-    props: Object.keys(schema.inputs ?? {}),
-    emits: Object.keys(schema.outputs ?? {}),
-    setup(props, { slots, emit }) {
-      const dispatchEvent = (event: string, ...data: any) => {
-        if (Object.keys(schema.outputs ?? {}).includes(event)) {
-          emit(event, ...data)
-        } else {
-          console.warn(`Event ${event} not found in schema.outputs`)
-        }
-      }
-      return () => h(RenderMain, { schema: rawSchema, props, dispatchEvent, blockName: name }, slots)
-    }
-  }))
+type BlockComponent = Component & { __schema?: BlockSchema }
+
+type BlockRendererContext = {
+  [BLOCKS]?: Record<string, BlockComponent>
+  [MATERIALS]?: {
+    blocks?: Record<string, BlockSchema>
+    [key: string]: unknown
+  }
 }
 
-function getBlockCache(context: any) {
+export function defineBlock(name: string, schema: BlockSchema) {
+  const rawSchema = markRaw(schema)
+  return markRaw(
+    defineComponent({
+      name,
+      props: getSchemaIOKeys(schema.inputs),
+      emits: getSchemaIOKeys(schema.outputs),
+      setup(props, { slots, emit }) {
+        const outputKeys = getSchemaIOKeys(schema.outputs)
+        const dispatchEvent = (event: string, ...data: unknown[]) => {
+          if (outputKeys.includes(event)) {
+            emit(event, ...data)
+          } else {
+            console.warn(`Event ${event} not found in schema.outputs`)
+          }
+        }
+        return () => h(RenderMain, { schema: rawSchema, props, dispatchEvent, blockName: name }, slots)
+      }
+    })
+  ) as BlockComponent
+}
+
+function getBlockCache(context: BlockRendererContext) {
   return context[BLOCKS]
 }
 
-export function loadBlock(name: string, context: any) {
+export function loadBlock(name: string, context: BlockRendererContext) {
   const schema = context[MATERIALS]?.blocks?.[name]
   if (!schema) return null
   const cache = getBlockCache(context)
@@ -40,7 +54,7 @@ export function loadBlock(name: string, context: any) {
   return cache[name]
 }
 
-export function getBlock(name: string, context: any) {
+export function getBlock(name: string, context: BlockRendererContext) {
   if (!context[MATERIALS]?.blocks?.[name]) return null
   return loadBlock(name, context)
 }
