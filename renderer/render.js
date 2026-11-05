@@ -25,10 +25,7 @@ import {
   CanvasSection
 } from '@opentiny/tiny-engine-builtin-component'
 import {
-  CanvasBox,
   CanvasText,
-  CanvasSlot,
-  CanvasImg,
   CanvasPlaceholder,
   CanvasRouterLink,
   CanvasRouterView
@@ -98,11 +95,6 @@ const transformJSX = (code) => {
 
 export const Mapper = {
   Text: CanvasText,
-  div: CanvasBox,
-  Slot: CanvasSlot,
-  slot: CanvasSlot,
-  Template: CanvasBox,
-  Img: CanvasImg,
   CanvasRow,
   CanvasCol,
   CanvasRowColContainer,
@@ -208,21 +200,10 @@ function renderComponent(schema, scope, context, slots) {
     return null
   }
 
-  if (componentName === 'Slot') {
-    const slotProps = schema.props || {}
-    const slotName = slotProps.name || 'default'
-    const rawParams = slotProps.params
-    const paramList = Array.isArray(rawParams) ? rawParams : []
-    const params = paramList.reduce((acc, param) => {
-      acc[param.name] = parseData(param.value, scope, context)
-      return acc
-    }, {})
-    return slots?.[slotName]?.(params) || getChildren(schema, scope, context)?.default?.(params) || null
-  }
+  const isSlot = componentName === 'Slot' || componentName === 'slot'
+  const component = isSlot ? null : getComponent(componentName, context)
 
-  const component = getComponent(componentName, context)
-
-  if (!component) {
+  if (!isSlot && !component) {
     return null
   }
 
@@ -240,9 +221,19 @@ function renderComponent(schema, scope, context, slots) {
       return null
     }
 
-    const Ele = h(component, getBindProps(schema, mergeScope, context, slots), getChildren(schema, mergeScope, context, slots))
+    if (isSlot) {
+      const slotProps = schema.props || {}
+      const slotName = slotProps.name || 'default'
+      const rawParams = slotProps.params
+      const paramList = Array.isArray(rawParams) ? rawParams : []
+      const params = paramList.reduce((acc, param) => {
+        acc[param.name] = parseData(param.value, mergeScope, context)
+        return acc
+      }, {})
+      return slots?.[slotName]?.(params) || getChildren(schema, mergeScope, context, slots)?.default?.(params) || null
+    }
 
-    return Ele
+    return h(component, getBindProps(schema, mergeScope, context, slots), getChildren(schema, mergeScope, context, slots))
   }
 
   return loop ? loopList?.map(renderElement) : renderElement()
