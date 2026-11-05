@@ -31,13 +31,16 @@ export function loadBlock(name: string, context: any) {
   if (!schema) return null
   const cache = getBlockCache(context)
   if (!cache) return null
-  if (!cache[name]) {
-    cache[name] = defineBlock(name, schema)
+  // schema 引用变化时重建（编辑器替换 blocks[name] 后避免闭包钉死旧 schema）
+  if (!cache[name] || cache[name].__schema !== schema) {
+    const block = defineBlock(name, schema)
+    block.__schema = schema
+    cache[name] = block
   }
   return cache[name]
 }
 
 export function getBlock(name: string, context: any) {
   if (!context[MATERIALS]?.blocks?.[name]) return null
-  return getBlockCache(context)?.[name] || loadBlock(name, context)
+  return loadBlock(name, context)
 }

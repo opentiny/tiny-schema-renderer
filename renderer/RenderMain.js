@@ -68,6 +68,8 @@ export default {
 
     watch(() => customSettings?.materials, (newVal) => {
       context[MATERIALS] = newVal ?? {}
+      // 顶层 materials 引用变化时清空区块缓存；嵌套替换依赖 loadBlock 的 schema 引用比较
+      reset(context[BLOCKS])
     })
 
     watch(() => customSettings?.notify, (newVal) => {
