@@ -10,7 +10,7 @@
  *
  */
 
-import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured, onUnmounted, watch, toRaw, markRaw } from 'vue'
+import { h, provide, nextTick, reactive, shallowReactive, watchEffect, inject, onErrorCaptured, onUnmounted, watch, markRaw } from 'vue'
 import _ from 'lodash'
 import Loading from './Loading.vue'
 import renderer, { parseData } from './render'
@@ -57,9 +57,6 @@ export default {
       parentPageContext?.[RENDERER_INSTANCE_ID] ?? Math.random().toString(36).slice(2, 8)
     context[RENDERER_INSTANCE_ID] = rendererInstanceId
     context.props = props.props
-    watch(() => props.props, (newVal) => {
-      context.props = newVal
-    })
 
     const cssScopeId = props.blockName
       ? `data-schema-${rendererInstanceId}-block-${props.blockName}`
