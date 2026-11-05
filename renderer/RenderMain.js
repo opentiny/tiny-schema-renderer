@@ -20,6 +20,8 @@ import { RENDERER_SETTINGS_KEY } from './renderer-settings'
 import useCustomSetting from './useCustomSetting'
 import { getPageLifeCycleFns } from './lifeCycles'
 
+const noop = () => {}
+
 export default {
   props: {
     schema: {
@@ -32,7 +34,7 @@ export default {
     },
     dispatchEvent: {
       type: Function,
-      default: () => () => {}
+      default: noop
     },
     // 区块名：有值时按 rendererInstanceId + blockName 生成稳定 cssScopeId，避免同实例多区块重复插 style
     blockName: {
