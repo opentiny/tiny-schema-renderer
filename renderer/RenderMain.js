@@ -112,9 +112,12 @@ export default {
       }
     }
 
+    // 转发到当前 props.dispatchEvent，避免 clear 间隙或 prop 更新后 methods 上挂着旧引用
+    const boundDispatchEvent = (...args) => props.dispatchEvent(...args)
+
     const setMethods = (data = {}, clear) => {
-      clear && reset(methods);
-      if (clear) {methods.dispatchEvent = props.dispatchEvent} 
+      clear && reset(methods)
+      methods.dispatchEvent = boundDispatchEvent
       // 这里有些方法在画布还是有执行的必要的，比如说表格的renderer和formatText方法，包括一些自定义渲染函数
       Object.assign(
         methods,
