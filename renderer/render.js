@@ -25,14 +25,12 @@ import {
   CanvasSection
 } from '@opentiny/tiny-engine-builtin-component'
 import {
-  CanvasBox,
   CanvasText,
-  CanvasSlot,
-  CanvasImg,
   CanvasPlaceholder,
   CanvasRouterLink,
   CanvasRouterView
 } from './builtin'
+import { getBlock } from './block'
 
 const { getCustomSettings } = useCustomSetting()
 
@@ -97,11 +95,6 @@ const transformJSX = (code) => {
 
 export const Mapper = {
   Text: CanvasText,
-  div: CanvasBox,
-  Slot: CanvasSlot,
-  slot: CanvasSlot,
-  Template: CanvasBox,
-  Img: CanvasImg,
   CanvasRow,
   CanvasCol,
   CanvasRowColContainer,
@@ -197,7 +190,7 @@ const parseExpression = (data, scope, ctx, isJsx = false) => {
   }
 }
 
-function renderComponent(schema, scope, context) {
+function renderComponent(schema, scope, context, slots) {
   const { componentName, loop, loopArgs, condition } = schema
 
   // 处理数据源和表格fetchData的映射关系
@@ -207,9 +200,10 @@ function renderComponent(schema, scope, context) {
     return null
   }
 
-  const component = getComponent(componentName, context)
+  const isSlot = componentName === 'Slot' || componentName === 'slot'
+  const component = isSlot ? null : getComponent(componentName, context)
 
-  if (!component) {
+  if (!isSlot && !component) {
     return null
   }
 
@@ -227,25 +221,35 @@ function renderComponent(schema, scope, context) {
       return null
     }
 
-    const Ele = h(component, getBindProps(schema, mergeScope, context), getChildren(schema, mergeScope, context))
+    if (isSlot) {
+      const slotProps = schema.props || {}
+      const slotName = slotProps.name || 'default'
+      const rawParams = slotProps.params
+      const paramList = Array.isArray(rawParams) ? rawParams : []
+      const params = paramList.reduce((acc, param) => {
+        acc[param.name] = parseData(param.value, mergeScope, context)
+        return acc
+      }, {})
+      return slots?.[slotName]?.(params) || getChildren(schema, mergeScope, context, slots)?.default?.(params) || null
+    }
 
-    return Ele
+    return h(component, getBindProps(schema, mergeScope, context, slots), getChildren(schema, mergeScope, context, slots))
   }
 
   return loop ? loopList?.map(renderElement) : renderElement()
 }
 
-const renderDefault = (children, scope, ctx) => {
+const renderDefault = (children, scope, ctx, slots) => {
   if (!children) {
     return null
   }
-  const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx))
+  const childrenComponents = children.map?.((child) => renderComponent(child, scope, ctx, slots))
 
   return childrenComponents.filter(Boolean)
 }
 
-const parseJSSlot = (data, scope, ctx) => {
-  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, ctx)
+const parseJSSlot = (data, scope, ctx, slots) => {
+  return ($scope) => renderDefault(data.value, { ...scope, ...$scope }, ctx, slots)
 }
 
 export const generateFn = (innerFn, context) => {
@@ -350,7 +354,7 @@ const generateCollection = (schema) => {
 }
 
 export const getComponent = (name, context) => {
-  return Mapper[name] || context[MATERIALS]?.components?.[name] || customElements[name] || (isHTMLTag(name) ? name : null)
+  return Mapper[name] || getBlock(name, context) || context[MATERIALS]?.components?.[name] || customElements[name] || (isHTMLTag(name) ? name : null)
 }
 
 // 解析JSX字符串为可执行函数
@@ -407,11 +411,11 @@ const parseJSFunction = (data, scope, ctx) => {
 
 const parseList = []
 
-export function parseData(data, scope, ctx) {
+export function parseData(data, scope, ctx, slots) {
   let res = data
   parseList.some((item) => {
     if (item.type(data)) {
-      res = item.parseFunc(data, scope, ctx)
+      res = item.parseFunc(data, scope, ctx, slots)
 
       return true
     }
@@ -436,14 +440,14 @@ const parseLoopArgs = (_loop) => {
   return undefined
 }
 
-const parseObjectData = (data, scope, ctx) => {
+const parseObjectData = (data, scope, ctx, slots) => {
   if (!data) {
     return data
   }
 
   // 如果是状态访问器,则直接解析默认值
   if (isStateAccessor(data)) {
-    return parseData(data.defaultValue, scope, ctx)
+    return parseData(data.defaultValue, scope, ctx, slots)
   }
 
   const res = {}
@@ -452,7 +456,7 @@ const parseObjectData = (data, scope, ctx) => {
     if (key === 'slot' && value?.name) {
       res[key] = value.name
     } else {
-      res[key] = parseData(value, scope, ctx)
+      res[key] = parseData(value, scope, ctx, slots)
     }
   })
 
@@ -468,7 +472,8 @@ const parseObjectData = (data, scope, ctx) => {
         value: `(value) => ${modelValue[1].value}=value`
       },
       scope,
-      ctx
+      ctx,
+      slots
     )
   }
 
@@ -479,7 +484,7 @@ const parseObjectData = (data, scope, ctx) => {
     res.ref = parseData({
       type: JS_FUNCTION,
       value: `(instance) => ${refValue[1].value}=instance`
-    }, scope, ctx)
+    }, scope, ctx, slots)
   }
 
   return res
@@ -489,8 +494,8 @@ const parseString = (data) => {
   return data.trim()
 }
 
-const parseArray = (data, scope, ctx) => {
-  return data.map((item) => parseData(item, scope, ctx))
+const parseArray = (data, scope, ctx, slots) => {
+  return data.map((item) => parseData(item, scope, ctx, slots))
 }
 
 const parseFunction = (data, scope, ctx) => {
@@ -555,26 +560,26 @@ const generateSlotGroup = (children, isCustomElm, schema) => {
   return slotGroup
 }
 
-const renderSlot = (children, scope, context, schema, isCustomElm) => {
+const renderSlot = (children, scope, context, schema, isCustomElm, slots) => {
   if (children.some((a) => a.componentName === 'Template')) {
     const slotGroup = generateSlotGroup(children, isCustomElm, schema)
-    const slots = {}
+    const slotsMap = {}
 
     Object.keys(slotGroup).forEach((slotName) => {
       const currentSlot = slotGroup[slotName]
 
-      slots[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, context)
+      slotsMap[slotName] = ($scope) => renderDefault(currentSlot.value, { ...scope, ...$scope }, context, slots)
     })
 
-    return slots
+    return slotsMap
   }
 
-  return { default: () => renderDefault(children, scope, context) }
+  return { default: () => renderDefault(children, scope, context, slots) }
 }
 
 const directChildrenHasTemplate = (children) => children.some((child) => child.componentName === 'Template')
 
-const getBindProps = (schema, scope, context) => {
+const getBindProps = (schema, scope, context, slots) => {
   const { componentName } = schema
 
   if (componentName === 'CanvasPlaceholder') {
@@ -583,7 +588,7 @@ const getBindProps = (schema, scope, context) => {
 
   const { cssScopeId } = context
   const bindProps = {
-    ...parseData(schema.props, scope, context),
+    ...parseData(schema.props, scope, context, slots),
     'data-id': schema.id,
     'data-tag': componentName,
     [cssScopeId]: ''
@@ -627,7 +632,7 @@ const injectPlaceHolder = (componentName, children) => {
   return children
 }
 
-const getChildren = (schema, mergeScope, context) => {
+const getChildren = (schema, mergeScope, context, slots) => {
   const { componentName, children } = schema
 
   const renderChildren = injectPlaceHolder(componentName, children)
@@ -644,13 +649,13 @@ const getChildren = (schema, mergeScope, context) => {
   const isCustomElm = customElements[componentName]
 
   if (directChildrenHasTemplate(renderChildren)) {
-    return renderSlot(renderChildren, mergeScope, context, schema, isCustomElm)
+    return renderSlot(renderChildren, mergeScope, context, schema, isCustomElm, slots)
   }
 
   // 这里 children 需要返回一个默认插槽的函数，避免 vue 告警：
   // Non-function value encountered for default slot. Prefer function slots for better performance.
   return {
-    default: () => children.map?.((child) => renderComponent(child, mergeScope, context)).filter(Boolean)
+    default: () => children.map?.((child) => renderComponent(child, mergeScope, context, slots)).filter(Boolean)
   }
 }
 
@@ -666,9 +671,9 @@ export const renderer = {
   },
   render() {
     const context = inject('pageContext')
-    const { scope, schema } = this
+    const { scope, schema, $slots: slots } = this
 
-    return renderComponent(schema, scope, context)
+    return renderComponent(schema, scope, context, slots)
   }
 }
 

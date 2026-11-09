@@ -645,6 +645,53 @@
         }
       ],
       "id": "24532395"
+    },
+    {
+      "componentName": "TestBlock",
+      "props": {
+        "text": "外部传入属性",
+        "onClickText": {
+          "type": "JSFunction",
+          "value": "function(content) { console.log('Text clicked', content) }"
+        }
+      },
+      "children": [
+        {
+          "componentName": "Template",
+          "props": {
+            "slot": "header",
+            "params": ["title"]
+          },
+          "children": [
+            {
+              "componentName": "Text",
+              "props": {
+                "text": {
+                  "type": "JSExpression",
+                  "value": "this.state.formItemList[0].label + title"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "componentName": "Template",
+          "props": {
+            "slot": "footer"
+          },
+          "children": [
+            {
+              "componentName": "Text",
+              "props": {
+                "text": {
+                  "type": "JSExpression",
+                  "value": "this.state.formItemList[1].label"
+                }
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "dataSource": {
