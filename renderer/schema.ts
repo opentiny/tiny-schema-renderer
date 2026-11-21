@@ -37,27 +37,72 @@ export type PropValue =
   | PropValue[]
   | { [key: string]: PropValue }
 
-/** 协议中的输入/输出口（数组项） */
-export interface SchemaIOItem {
-  name: string
-  type: string
+export interface I18nText {
+  zh_CN?: string
+  en_US?: string
+  [key: string]: string | undefined
+}
+
+/** 区块 schema.properties[].content 里的一条属性，对应运行时 prop */
+export interface BlockPropertyContent {
+  property: string
+  type?: string
+  label?: I18nText | { text?: I18nText }
+  description?: I18nText
+  required?: boolean
   defaultValue?: unknown
+  [key: string]: unknown
+}
+
+export interface BlockPropertyGroup {
+  name?: string
+  label?: I18nText
+  description?: I18nText
+  content?: BlockPropertyContent[]
+}
+
+export interface BlockFunctionParam {
+  name?: string
+  type?: string
+  defaultValue?: string
+  description?: I18nText
+}
+
+export interface BlockFunctionInfo {
+  params?: BlockFunctionParam[]
+  returns?: Record<string, unknown>
+}
+
+/** 区块 schema.events 的值。键名沿用物料协议，如 onClickText */
+export interface BlockEventConfig {
+  label?: I18nText
+  description?: I18nText
+  type?: string
+  functionInfo?: BlockFunctionInfo
+  defaultValue?: string
+}
+
+export interface BlockSlotParam {
+  name?: string
+  type?: string
+  description?: I18nText
+}
+
+export interface BlockSlotConfig {
+  label?: I18nText
+  description?: I18nText
+  params?: BlockSlotParam[]
 }
 
 /**
- * 运行时常见的 map 写法（如 materials.blocks 示例）：
- * { text: { type: 'string' } }
+ * 区块对外接口，对齐物料协议 IComponentSchema。
+ * properties 声明输入，events 声明输出，slots 声明可投影插槽。
  */
-export type SchemaIOMap = Record<
-  string,
-  {
-    type?: string
-    defaultValue?: unknown
-    [key: string]: unknown
-  }
->
-
-export type SchemaIO = SchemaIOItem[] | SchemaIOMap
+export interface BlockComponentSchema {
+  properties?: BlockPropertyGroup[]
+  events?: Record<string, BlockEventConfig>
+  slots?: Record<string, BlockSlotConfig>
+}
 
 export interface SchemaNode {
   id?: string
@@ -75,8 +120,8 @@ export interface SchemaNode {
 }
 
 /**
- * 页面 Schema。区块与页面同构，靠 componentName / blockName 区分，
- * 并通过 inputs / outputs 声明对外接口。
+ * 页面 Schema。区块与页面同构，靠 componentName / blockName 区分。
+ * 区块对外接口写在 schema（properties / events / slots）。
  */
 export interface PageSchema extends Omit<SchemaNode, 'children' | 'componentName'> {
   componentName: string
@@ -95,22 +140,54 @@ export interface PageSchema extends Omit<SchemaNode, 'children' | 'componentName
     imports?: unknown[]
     [key: string]: unknown
   }
-  /** 输入接口：协议为数组；运行时亦支持 map */
-  inputs?: SchemaIO
-  /** 输出接口：协议为数组；运行时亦支持 map */
-  outputs?: SchemaIO
-  /** 区块对外属性元数据等 */
-  schema?: Record<string, unknown>
+  /** 区块对外接口：属性、事件、插槽 */
+  schema?: BlockComponentSchema
 }
 
 /** 区块 Schema：与页面同结构，通常 componentName 为区块名或 "Block" */
 export type BlockSchema = PageSchema
 
-/** 从 inputs / outputs（数组或 map）取出接口名，供 props / emits 声明 */
-export function getSchemaIOKeys(io?: SchemaIO | null): string[] {
-  if (!io) return []
-  if (Array.isArray(io)) {
-    return io.map((item) => item?.name).filter((name): name is string => Boolean(name))
+const ON_RE = /^on([A-Z].*)$/
+
+/**
+ * 物料事件名转 Vue emit 名：去掉 on 前缀并小写首字母。
+ * onClickText -> clickText，onUpdate:modelValue -> update:modelValue。
+ * 已经是 emit 名（clickText）时原样返回。
+ */
+export function toBlockEmitName(eventName: string): string {
+  const on = ON_RE.exec(eventName)
+  if (!on) return eventName
+  const rest = on[1]
+  return rest.charAt(0).toLowerCase() + rest.slice(1)
+}
+
+function unique(names: string[]): string[] {
+  return [...new Set(names)]
+}
+
+/** 区块 props：schema.properties[].content[].property */
+export function getBlockPropNames(block: BlockSchema): string[] {
+  const names: string[] = []
+  for (const group of block.schema?.properties ?? []) {
+    for (const item of group?.content ?? []) {
+      if (item?.property) names.push(item.property)
+    }
   }
-  return Object.keys(io)
+  return unique(names)
+}
+
+/** 区块 emits：schema.events 的键，去掉 on 前缀 */
+export function getBlockEmitNames(block: BlockSchema): string[] {
+  return unique(Object.keys(block.schema?.events ?? {}).map(toBlockEmitName))
+}
+
+/**
+ * 把 dispatchEvent 传入的名字解析成已声明的 emit 名。
+ * 协议键 onClickText 与运行时名 clickText 都算命中。
+ */
+export function resolveBlockEmitName(event: string, emitNames: readonly string[]): string | null {
+  if (emitNames.includes(event)) return event
+  const normalized = toBlockEmitName(event)
+  if (normalized !== event && emitNames.includes(normalized)) return normalized
+  return null
 }
