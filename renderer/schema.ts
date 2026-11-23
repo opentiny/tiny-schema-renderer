@@ -180,14 +180,3 @@ export function getBlockPropNames(block: BlockSchema): string[] {
 export function getBlockEmitNames(block: BlockSchema): string[] {
   return unique(Object.keys(block.schema?.events ?? {}).map(toBlockEmitName))
 }
-
-/**
- * 把 dispatchEvent 传入的名字解析成已声明的 emit 名。
- * 协议键 onClickText 与运行时名 clickText 都算命中。
- */
-export function resolveBlockEmitName(event: string, emitNames: readonly string[]): string | null {
-  if (emitNames.includes(event)) return event
-  const normalized = toBlockEmitName(event)
-  if (normalized !== event && emitNames.includes(normalized)) return normalized
-  return null
-}

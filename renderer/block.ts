@@ -1,6 +1,6 @@
 import { defineAsyncComponent, defineComponent, h, markRaw, type Component } from 'vue'
 import { BLOCKS, MATERIALS } from './useContext.js'
-import { getBlockEmitNames, getBlockPropNames, resolveBlockEmitName, type BlockSchema } from './schema'
+import { getBlockEmitNames, getBlockPropNames, type BlockSchema } from './schema'
 
 const RenderMain = defineAsyncComponent(() => import('./RenderMain.js').then((m) => m.default))
 
@@ -25,9 +25,8 @@ export function defineBlock(name: string, schema: BlockSchema) {
       emits: emitNames,
       setup(props, { slots, emit }) {
         const dispatchEvent = (event: string, ...data: unknown[]) => {
-          const emitName = resolveBlockEmitName(event, emitNames)
-          if (emitName) {
-            emit(emitName, ...data)
+          if (emitNames.includes(event)) {
+            emit(event, ...data)
           } else {
             console.warn(`Event ${event} not found in schema.events`)
           }
